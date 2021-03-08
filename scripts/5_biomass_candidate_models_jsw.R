@@ -187,10 +187,10 @@ write_csv(coef_mods_table, "results/all_biomass_model_coef.csv")
        resource = loo_6)))
 
 
-# Rerun temp model with prior samples and save
-mod_best <- update(mod5,
-                   sample_prior = TRUE, iter = 1000, chains = 4)
-# saveRDS(mod_best, "results/mod_best_biomass.RDS")
+# Rerun best model with prior samples and save
+# mod_best <- update(mod6,
+                   # sample_prior = TRUE)
+# saveRDS(mod_best, "results/log_mg_mat_can_brms.RDS")
 #mod_best <- readRDS("results/log_mg_mat_can_brms.RDS")
 
 

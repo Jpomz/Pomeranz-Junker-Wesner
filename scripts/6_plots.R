@@ -32,6 +32,7 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
         geom_polygon(data = world,
                      aes(x = long, y = lat, group = group),
                              color = "white",
+<<<<<<< HEAD
                      fill = "gray") +
         geom_polygon(data = states,
                      aes(x = long,
@@ -39,6 +40,15 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                          group = group),
                      color = "white",
                      fill = "gray") +
+=======
+                     fill = "grey") +
+        geom_polygon(data = states,
+                     aes(x = long,
+                         y = lat,
+                         group =group),
+                     color = "white",
+                     fill = "grey") +
+>>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
         coord_quickmap(ylim = c(18,70),
                        xlim = c(-160,-50)) +
         geom_point(data = site.info,
@@ -51,8 +61,11 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                    shape = 21) +
         scale_fill_viridis_c(option = "plasma") +
         scale_color_viridis_c(option = "plasma") +
-        theme_map()
+                labs(color = expression("Mean Annual\nTemperature " ( degree*C))) +
+                guides(fill = F) +
+        theme_void()
 )
+
 ggsave(map,
        file = "plots/map.png",
        width = 10,
@@ -62,6 +75,7 @@ ggsave(map,
 
 # Figure 2 main text ------------------------------------------------------
 
+<<<<<<< HEAD
 #load models
 b_mat_c_brms <- readRDS("results/b_mat_c_brms.RDS")
 log_mg_mat_can_brms <- readRDS("results/log_mg_mat_can_brms.RDS")
@@ -120,6 +134,24 @@ d2 <- ggplot(data = log_mg_data,
                 "Log10 Dry Mass mg/"~m^2),
              x = "Standardized Mean Annual Temperature") +
         theme(legend.position = "top")
+=======
+
+#plot main figure
+
+c2 <- readRDS("plots/b_mat_c.RDS")
+d2 <- readRDS("plots/log_mg_mat.RDS")
+
+
+main_plot <- plot_grid(
+        c2 ,
+        d2 +guides(color = F) +
+                labs(y = expression(
+                        "Macroinvertebrate Dry Mass g/"~m^2)),
+        ncol = 1,
+        align = "vh",
+        labels = "auto")
+
+>>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
 
 legend <- get_legend(
         d2 + guides(color = guide_legend(nrow = 1,
@@ -167,17 +199,21 @@ post_plot <- plot_grid(
                 labs(x ="ISD exponent"),
         f3 + 
                 theme_bw() + 
-                guides(fill = guide_legend(
-                        title = "Std(Temp.)")) +
         labs(x = expression(
-                "Macroinvertebrate Dry Mass mg/"~m^2)),
+                "Macroinvertebrate Dry Mass g/"~m^2)),
         ncol = 2,
         align = "h",
         axis = "b",
+<<<<<<< HEAD
         labels = "auto",
         rel_widths = c(1, 1.3))
 
 post_plot 
+=======
+        rel_widths = c(1, 1.55),
+        labels = "auto")
+post_plot
+>>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
 
 ggsave(post_plot,
        file = "plots/post_plot.jpg",
@@ -215,6 +251,7 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
 
 
 (lit_plot <- lit %>% 
+<<<<<<< HEAD
                 mutate(Driver = fct_relevel(Driver, "Temperature",
                                             "Land Use")) %>% 
                 ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
@@ -236,17 +273,36 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
                 scale_shape_manual(values = c(21, 22, 23, 24)) +
                 scale_fill_manual(
                         values = c("black", "white", "white", "white")) +
+=======
+                mutate(Driver = fct_relevel(Driver, "Temperature", "Land Use")) %>% 
+                ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
+                coord_flip() +
+                geom_segment(aes(y= 0, yend = b_diff, xend = reorder(Author, -b_diff))) +
+                geom_point(aes(shape = Driver, fill = Driver), size = 4) +
+                geom_hline(yintercept = range_bmat_summary$mean) +
+                annotate("text", x = 12, y = 0.7, label = "This study (median and 95% CrI)") +
+                geom_rect(aes(xmin = 0, xmax = 13, ymin = range_bmat_summary$lower, 
+                              ymax = range_bmat_summary$upper), color = NA, alpha = 0.01) +
+                # scale_fill_brewer(type = "qual") +
+                # facet_grid(Driver ~ .) +
+                scale_shape_manual(values = c(21, 22, 23, 24)) +
+                scale_fill_manual(values = c("black", "white", "white", "white")) +
+>>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
                 labs(y = "Absolute change in ISD exponent (or slope)") +
                 theme_classic() +
                 theme(axis.title.y = element_blank(),
                       text = element_text(size = 15),
                       axis.text.y = element_text(size = 10)) +
+<<<<<<< HEAD
                 annotate("segment",
                          x = 11.6,
                          y = 0.43,
                          xend = 11.6,
                          yend = 0.24,
                          arrow=arrow(type = "closed")) +
+=======
+                annotate("segment", x = 11.6, y = 0.43, xend = 11.6, yend = 0.24, arrow=arrow(type = "closed")) +
+>>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
                 ylim(0,1))
 
 
