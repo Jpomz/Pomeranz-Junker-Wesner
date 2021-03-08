@@ -32,7 +32,6 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
         geom_polygon(data = world,
                      aes(x = long, y = lat, group = group),
                              color = "white",
-<<<<<<< HEAD
                      fill = "gray") +
         geom_polygon(data = states,
                      aes(x = long,
@@ -40,7 +39,6 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                          group = group),
                      color = "white",
                      fill = "gray") +
-=======
                      fill = "grey") +
         geom_polygon(data = states,
                      aes(x = long,
@@ -48,7 +46,6 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                          group =group),
                      color = "white",
                      fill = "grey") +
->>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
         coord_quickmap(ylim = c(18,70),
                        xlim = c(-160,-50)) +
         geom_point(data = site.info,
@@ -64,7 +61,7 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                 labs(color = expression("Mean Annual\nTemperature " ( degree*C))) +
                 guides(fill = F) +
         theme_void()
-)
+        )
 
 ggsave(map,
        file = "plots/map.png",
@@ -75,7 +72,6 @@ ggsave(map,
 
 # Figure 2 main text ------------------------------------------------------
 
-<<<<<<< HEAD
 #load models
 b_mat_c_brms <- readRDS("results/b_mat_c_brms.RDS")
 log_mg_mat_can_brms <- readRDS("results/log_mg_mat_can_brms.RDS")
@@ -134,7 +130,6 @@ d2 <- ggplot(data = log_mg_data,
                 "Log10 Dry Mass mg/"~m^2),
              x = "Standardized Mean Annual Temperature") +
         theme(legend.position = "top")
-=======
 
 #plot main figure
 
@@ -151,7 +146,6 @@ main_plot <- plot_grid(
         align = "vh",
         labels = "auto")
 
->>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
 
 legend <- get_legend(
         d2 + guides(color = guide_legend(nrow = 1,
@@ -204,16 +198,10 @@ post_plot <- plot_grid(
         ncol = 2,
         align = "h",
         axis = "b",
-<<<<<<< HEAD
         labels = "auto",
         rel_widths = c(1, 1.3))
 
-post_plot 
-=======
-        rel_widths = c(1, 1.55),
-        labels = "auto")
 post_plot
->>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
 
 ggsave(post_plot,
        file = "plots/post_plot.jpg",
@@ -251,7 +239,6 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
 
 
 (lit_plot <- lit %>% 
-<<<<<<< HEAD
                 mutate(Driver = fct_relevel(Driver, "Temperature",
                                             "Land Use")) %>% 
                 ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
@@ -273,7 +260,6 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
                 scale_shape_manual(values = c(21, 22, 23, 24)) +
                 scale_fill_manual(
                         values = c("black", "white", "white", "white")) +
-=======
                 mutate(Driver = fct_relevel(Driver, "Temperature", "Land Use")) %>% 
                 ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
                 coord_flip() +
@@ -287,22 +273,18 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
                 # facet_grid(Driver ~ .) +
                 scale_shape_manual(values = c(21, 22, 23, 24)) +
                 scale_fill_manual(values = c("black", "white", "white", "white")) +
->>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
                 labs(y = "Absolute change in ISD exponent (or slope)") +
                 theme_classic() +
                 theme(axis.title.y = element_blank(),
                       text = element_text(size = 15),
                       axis.text.y = element_text(size = 10)) +
-<<<<<<< HEAD
                 annotate("segment",
                          x = 11.6,
                          y = 0.43,
                          xend = 11.6,
                          yend = 0.24,
                          arrow=arrow(type = "closed")) +
-=======
                 annotate("segment", x = 11.6, y = 0.43, xend = 11.6, yend = 0.24, arrow=arrow(type = "closed")) +
->>>>>>> 0fbbce0e3a3ded13ccf6ad64640f1194176934a7
                 ylim(0,1))
 
 
