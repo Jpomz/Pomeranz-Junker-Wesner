@@ -215,25 +215,38 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
 
 
 (lit_plot <- lit %>% 
-                mutate(Driver = fct_relevel(Driver, "Temperature", "Land Use")) %>% 
+                mutate(Driver = fct_relevel(Driver, "Temperature",
+                                            "Land Use")) %>% 
                 ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
                 coord_flip() +
-                geom_segment(aes(y= 0, yend = b_diff, xend = reorder(Author, -b_diff))) +
-                geom_point(aes(shape = Driver, fill = Driver), size = 4) +
+                geom_segment(
+                        aes(y= 0, yend = b_diff,
+                            xend = reorder(Author, -b_diff))) +
+                geom_point(aes(shape = Driver, fill = Driver),
+                           size = 4) +
                 geom_hline(yintercept = range_bmat_summary$mean) +
                 annotate("text", x = 12, y = 0.7, label = "This study (median and 95% CrI)") +
-                geom_rect(aes(xmin = 0, xmax = 13, ymin = range_bmat_summary$lower, 
-                              ymax = range_bmat_summary$upper), color = NA, alpha = 0.01) +
+                geom_rect(
+                        aes(xmin = 0, xmax = 13,
+                            ymin = range_bmat_summary$lower,
+                            ymax = range_bmat_summary$upper),
+                        color = NA, alpha = 0.01) +
                 # scale_fill_brewer(type = "qual") +
                 # facet_grid(Driver ~ .) +
                 scale_shape_manual(values = c(21, 22, 23, 24)) +
-                scale_fill_manual(values = c("black", "white", "white", "white")) +
+                scale_fill_manual(
+                        values = c("black", "white", "white", "white")) +
                 labs(y = "Absolute change in ISD exponent (or slope)") +
                 theme_classic() +
                 theme(axis.title.y = element_blank(),
                       text = element_text(size = 15),
                       axis.text.y = element_text(size = 10)) +
-                annotate("segment", x = 11.6, y = 0.43, xend = 11.6, yend = 0.24, arrow=arrow(type = "closed")) +
+                annotate("segment",
+                         x = 11.6,
+                         y = 0.43,
+                         xend = 11.6,
+                         yend = 0.24,
+                         arrow=arrow(type = "closed")) +
                 ylim(0,1))
 
 
