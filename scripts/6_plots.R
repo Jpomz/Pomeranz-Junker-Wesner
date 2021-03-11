@@ -223,33 +223,42 @@ lit <- read_csv("data/temp_summaries_table.csv") %>%
 
 library(ggthemes)
 
-range_bmat <- fitted(b_mat_c_brms, newdata = data.frame(mat.c = c(min(b_mat_c_brms$data$mat.c),
-                                                                  max(b_mat_c_brms$data$mat.c))),
-                                                        re_formula = NA, summary = F) %>% 
-        as.data.frame() %>% rename(min = V1, max = V2) %>% 
+range_bmat <- fitted(b_mat_c_brms,
+                     newdata = data.frame(
+                             mat.c = c(min(b_mat_c_brms$data$mat.c),
+                                       max(b_mat_c_brms$data$mat.c))),
+                     re_formula = NA,
+                     summary = FALSE) %>% 
+        as.data.frame() %>%
+        rename(min = V1, max = V2) %>% 
         mutate(abs_diff = abs(min - max))
 
 
-range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
-                                               lower = quantile(abs_diff, probs = 0.025),
-                                               upper = quantile(abs_diff, probs = 0.975),
-                                               mean_low = mean(min),
-                                               mean_high = mean(max))
-
+range_bmat_summary <- range_bmat %>%
+        summarize(mean = median(abs_diff),
+                  lower = quantile(abs_diff, probs = 0.025),
+                  upper = quantile(abs_diff, probs = 0.975),
+                  mean_low = mean(min),
+                  mean_high = mean(max))
 
 
 (lit_plot <- lit %>% 
-                mutate(Driver = fct_relevel(Driver, "Temperature",
+                mutate(Driver = fct_relevel(Driver,
+                                            "Temperature",
                                             "Land Use")) %>% 
-                ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
+                ggplot(aes(
+                        x = reorder(Author, -b_diff)
+                        , y = b_diff)) +
                 coord_flip() +
                 geom_segment(
                         aes(y= 0, yend = b_diff,
                             xend = reorder(Author, -b_diff))) +
-                geom_point(aes(shape = Driver, fill = Driver),
-                           size = 4) +
+                geom_point(aes(shape = Driver,
+                            fill = Driver),
+                        size = 4) +
                 geom_hline(yintercept = range_bmat_summary$mean) +
-                annotate("text", x = 12, y = 0.7, label = "This study (median and 95% CrI)") +
+                annotate("text", x = 12, y = 0.7,
+                         label = "This study (median and 95% CrI)") +
                 geom_rect(
                         aes(xmin = 0, xmax = 13,
                             ymin = range_bmat_summary$lower,
@@ -260,19 +269,6 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
                 scale_shape_manual(values = c(21, 22, 23, 24)) +
                 scale_fill_manual(
                         values = c("black", "white", "white", "white")) +
-                mutate(Driver = fct_relevel(Driver, "Temperature", "Land Use")) %>% 
-                ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
-                coord_flip() +
-                geom_segment(aes(y= 0, yend = b_diff, xend = reorder(Author, -b_diff))) +
-                geom_point(aes(shape = Driver, fill = Driver), size = 4) +
-                geom_hline(yintercept = range_bmat_summary$mean) +
-                annotate("text", x = 12, y = 0.7, label = "This study (median and 95% CrI)") +
-                geom_rect(aes(xmin = 0, xmax = 13, ymin = range_bmat_summary$lower, 
-                              ymax = range_bmat_summary$upper), color = NA, alpha = 0.01) +
-                # scale_fill_brewer(type = "qual") +
-                # facet_grid(Driver ~ .) +
-                scale_shape_manual(values = c(21, 22, 23, 24)) +
-                scale_fill_manual(values = c("black", "white", "white", "white")) +
                 labs(y = "Absolute change in ISD exponent (or slope)") +
                 theme_classic() +
                 theme(axis.title.y = element_blank(),
@@ -284,7 +280,9 @@ range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
                          xend = 11.6,
                          yend = 0.24,
                          arrow=arrow(type = "closed")) +
-                annotate("segment", x = 11.6, y = 0.43, xend = 11.6, yend = 0.24, arrow=arrow(type = "closed")) +
+                annotate("segment",
+                         x = 11.6, y = 0.43, xend = 11.6, yend = 0.24,
+                         arrow=arrow(type = "closed")) +
                 ylim(0,1))
 
 

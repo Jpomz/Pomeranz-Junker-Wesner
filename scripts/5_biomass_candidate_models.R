@@ -36,9 +36,9 @@ biomass <- biomass[,c("siteID", "ID", "year",
 d <- left_join(biomass, abiotic_s)
 #d <- left_join(biomass, ID_key)
 
-# log 10 mean dry weight estimate
-d$log_mg <- log10(d$u_biomass)
-d$scale_mg <- d$u_biomass/max(d$u_biomass)
+# convert mean dry weight estimate to grams
+# d$log_mg <- log10(d$u_biomass)
+# d$scale_mg <- d$u_biomass/max(d$u_biomass)
 d$biomass_g <- d$u_biomass/1000
 
 # community biomass models ------------------------------------------------
