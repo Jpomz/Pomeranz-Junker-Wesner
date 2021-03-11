@@ -1,4 +1,4 @@
-#compare NAS,LBNBiom, Woodward
+#compare Size Spectra methods
 
 library(tidyverse)
 library(sizeSpectra)
@@ -222,6 +222,8 @@ test_method <- dw %>%
 
 #saveRDS(test_method, "results/slope_estimates_methods_SI.RDS")
 #test_method <- readRDS("results/slope_estimates_methods_SI.RDS")
+
+# comparing to the methods of Perkins et al. 2019 Energetic equivalence underpins the size structure of tree and phytoplankton communities
 comp <- readRDS("results/perkins-compare.RDS")
 test_method <- left_join(test_method, comp)
 test_method <- left_join(test_method, site.info)
@@ -278,7 +280,7 @@ slope_q %>% pivot_wider(names_from = q, values_from = q_val) %>%
             row.names = FALSE)
 
 
-(panelA <- test_method %>%
+panelA <- test_method %>%
   rename(ELB = Perkins,
          MLE = mle,
          MLE_tail = MLBExponent) %>%
@@ -292,7 +294,7 @@ slope_q %>% pivot_wider(names_from = q, values_from = q_val) %>%
              color = method,
              linetype = method)) +
   geom_point(position = position_jitter(width = 0.3),
-             size = 2, alpha = 0.4) +
+             size = 2, alpha = 0.2) +
   geom_line(stat = "smooth",
             method = "lm",
             size = 1.5, 
@@ -301,37 +303,37 @@ slope_q %>% pivot_wider(names_from = q, values_from = q_val) %>%
   ylim(c(-2.8, 0.5)) +
   theme(legend.position = "none") +
   ylab("Estimated coefficient")
-)
 
 panelB <- test_method %>%
-    mutate(MLBExponent = MLBExponent - 1) %>%
-    rename(ELB = Perkins,
-           NELB = PN,
-           MLE = mle,
-           MLE_tail = MLBExponent) %>%
-    mutate(AS = AS - 1,
-           ELB = ELB - 1) %>%
-    pivot_longer(cols = 3:8,
-                 names_to = "method",
-                 values_to = "value") %>%
-    bind_rows(MLEbins) %>%
-    #left_join(site.info) %>%
-    ggplot(aes(x = mat.c, 
-               y = value, 
-               color = method,
-               linetype = method)) +
-    geom_point(position = position_jitter(width = 0.3),
-               size = 2, alpha = 0.4) +
-    geom_line(stat = "smooth",
-              method = "lm",
-              size = 1.5, 
-              alpha = 0.75) +
-    # stat_smooth(method = "lm",
-    #             se = FALSE) +
-    theme_bw() +
-    ylim(c(-2.8, 0.5)) +
-    ylab("Corrected coefficient")
+  mutate(MLBExponent = MLBExponent - 1) %>%
+  rename(ELB = Perkins,
+         NELB = PN,
+         MLE = mle,
+         MLE_tail = MLBExponent) %>%
+  mutate(AS = AS - 1,
+         ELB = ELB - 1) %>%
+  pivot_longer(cols = 3:8,
+               names_to = "method",
+               values_to = "value") %>%
+  bind_rows(MLEbins) %>%
+  #left_join(site.info) %>%
+  ggplot(aes(x = mat.c, 
+             y = value, 
+             color = method,
+             linetype = method)) +
+  geom_point(position = position_jitter(width = 0.3),
+             size = 2, alpha = 0.2) +
+  geom_line(stat = "smooth",
+            method = "lm",
+            size = 1.5, 
+            alpha = 1) +
+  # stat_smooth(method = "lm",
+  #             se = FALSE) +
+  theme_bw() +
+  theme(legend.position="bottom") +
+  ylim(c(-2.8, 0.5)) +
+  ylab("Corrected coefficient")
 
-plot_grid(panelA, panelB, rel_widths = c(1.5, 2))
+plot_grid(panelA, panelB, ncol = 1, rel_heights = c(1.5, 2))
 
-ggsave("plots/SI_compare_beta_mat.png")
+ggsave("plots/SI_compare_beta_mat.png", height = 6, width = 6, units = "in")
