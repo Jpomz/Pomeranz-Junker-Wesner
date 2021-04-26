@@ -39,7 +39,6 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                          group = group),
                      color = "white",
                      fill = "gray") +
-                     fill = "grey") +
         geom_polygon(data = states,
                      aes(x = long,
                          y = lat,
@@ -56,12 +55,12 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                    size = 4,
                    alpha = 0.9,
                    shape = 21) +
-        scale_fill_viridis_c(option = "plasma") +
-        scale_color_viridis_c(option = "plasma") +
+                scale_fill_viridis_c(option = "plasma") +
+                scale_color_viridis_c(option = "plasma") +
                 labs(color = expression("Mean Annual\nTemperature " ( degree*C))) +
                 guides(fill = F) +
-        theme_void()
-        )
+                theme_void()
+)
 
 ggsave(map,
        file = "plots/map.png",
@@ -72,64 +71,64 @@ ggsave(map,
 
 # Figure 2 main text ------------------------------------------------------
 
-#load models
+# #load models
 b_mat_c_brms <- readRDS("results/b_mat_c_brms.RDS")
-log_mg_mat_can_brms <- readRDS("results/log_mg_mat_can_brms.RDS")
-
-#extract conditional effects
-bmat_cond <- conditional_effects(b_mat_c_brms,
-                                 probs = c(.025, 0.975))
-log_mg_cond <- conditional_effects(log_mg_mat_can_brms,
-                                   effects = "mat.c",
-                                   probs = c(.025, 0.975))
-
-bmat_cond.df <- bmat_cond$mat.c %>% as_tibble() 
-log_mg_cond.df <- log_mg_cond$mat.c %>% as_tibble() 
-
-#load data
-mat_c_data <- b_mat_c_brms$data 
-log_mg_data <- log_mg_mat_can_brms$data
-
-
-#plot main figure
-
-
-c2 <- ggplot(data = mat_c_data, aes(x = mat.c, y = b)) +
-        geom_ribbon(data = bmat_cond.df,
-                    aes(ymax = upper__,
-                        ymin = lower__),
-                    alpha = 0.2) +
-        geom_line(data = bmat_cond.df, aes(y = estimate__),
-                  size = 1) +
-        geom_point(aes(color = mat.c),
-                   size = 1.5) +
-        scale_color_viridis(option = 'C') +
-        theme_bw() +
-        theme(legend.position = "none") +
-        labs(y = "ISD exponent",
-             x = "Standardized Mean Annual Temperature") +
-        guides(color = F) +
-        theme(axis.title.x = element_blank())
-
-
-d2 <- ggplot(data = log_mg_data,
-             aes(x = mat.c,
-                 y = log_mg)) +
-        geom_ribbon(data = log_mg_cond.df,
-                    aes(ymax = upper__,
-                        ymin = lower__),
-                    alpha = 0.2) +
-        geom_line(data = log_mg_cond.df,
-                  aes(y = estimate__),
-                  size = 1) +
-        geom_point(aes(color = mat.c),
-                   size = 1.5) +
-        scale_color_viridis(option = 'C') +
-        theme_bw() +
-        labs(y = expression(
-                "Log10 Dry Mass mg/"~m^2),
-             x = "Standardized Mean Annual Temperature") +
-        theme(legend.position = "top")
+#log_mg_mat_can_brms <- readRDS("results/log_mg_mat_can_brms.RDS")
+# 
+# #extract conditional effects
+# bmat_cond <- conditional_effects(b_mat_c_brms,
+#                                  probs = c(.025, 0.975))
+# log_mg_cond <- conditional_effects(log_mg_mat_can_brms,
+#                                    effects = "mat.c",
+#                                    probs = c(.025, 0.975))
+# 
+# bmat_cond.df <- bmat_cond$mat.c %>% as_tibble() 
+# log_mg_cond.df <- log_mg_cond$mat.c %>% as_tibble() 
+# 
+# #load data
+# mat_c_data <- b_mat_c_brms$data 
+# log_mg_data <- log_mg_mat_can_brms$data
+# 
+# 
+# #plot main figure
+# 
+# 
+# c2 <- ggplot(data = mat_c_data, aes(x = mat.c, y = b)) +
+#         geom_ribbon(data = bmat_cond.df,
+#                     aes(ymax = upper__,
+#                         ymin = lower__),
+#                     alpha = 0.2) +
+#         geom_line(data = bmat_cond.df, aes(y = estimate__),
+#                   size = 1) +
+#         geom_point(aes(color = mat.c),
+#                    size = 1.5) +
+#         scale_color_viridis(option = 'C') +
+#         theme_bw() +
+#         theme(legend.position = "none") +
+#         labs(y = "ISD exponent",
+#              x = "Standardized Mean Annual Temperature") +
+#         guides(color = F) +
+#         theme(axis.title.x = element_blank())
+# 
+# 
+# d2 <- ggplot(data = log_mg_data,
+#              aes(x = mat.c,
+#                  y = log_mg)) +
+#         geom_ribbon(data = log_mg_cond.df,
+#                     aes(ymax = upper__,
+#                         ymin = lower__),
+#                     alpha = 0.2) +
+#         geom_line(data = log_mg_cond.df,
+#                   aes(y = estimate__),
+#                   size = 1) +
+#         geom_point(aes(color = mat.c),
+#                    size = 1.5) +
+#         scale_color_viridis(option = 'C') +
+#         theme_bw() +
+#         labs(y = expression(
+#                 "Log10 Dry Mass mg/"~m^2),
+#              x = "Standardized Mean Annual Temperature") +
+#         theme(legend.position = "top")
 
 #plot main figure
 
@@ -148,13 +147,12 @@ main_plot <- plot_grid(
 
 
 legend <- get_legend(
-        d2 + guides(color = guide_legend(nrow = 1,
-                                         title = "STD(Temp.)")) +
+        d2 + guides(
+                color = guide_legend(
+                        nrow = 1,
+                        title = expression(
+                                "Mean Annual Temperature " ( degree*C)))) +
                 theme(legend.position = "bottom"))
-
-# c2 <- readRDS("plots/b_mat_c.RDS")
-# d2 <- readRDS("plots/log_mg_mat.RDS")
-
 
 main_plot <- plot_grid(
         c2,
@@ -172,7 +170,7 @@ main_plot
 ggsave(main_plot,
        file = "plots/main_plot.jpg",
        dpi = 600,
-       width = 5,
+       width = 6,
        height = 7)
 
 
@@ -247,12 +245,12 @@ range_bmat_summary <- range_bmat %>%
                                             "Temperature",
                                             "Land Use")) %>% 
                 ggplot(aes(
-                        x = reorder(Author, -b_diff)
-                        , y = b_diff)) +
+                        x = reorder(Author, -b_diff),
+                        y = b_diff)) +
                 coord_flip() +
-                geom_segment(
-                        aes(y= 0, yend = b_diff,
-                            xend = reorder(Author, -b_diff))) +
+                # geom_segment(
+                #         aes(y= 0, yend = b_diff,
+                #             xend = reorder(Author, -b_diff))) +
                 geom_point(aes(shape = Driver,
                             fill = Driver),
                         size = 4) +

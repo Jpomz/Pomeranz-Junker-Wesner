@@ -193,7 +193,7 @@ mod_best <- update(mod5,
 
 
 saveRDS(mod_best, "results/b_mat_c_brms.RDS")
-mod_best <- readRDS("results/b_mat_c_brms.RDS")
+#mod_best <- readRDS("results/b_mat_c_brms.RDS")
 
 # function to calculate probability that coef is < or > 0
 beta_0 <- function(model, b_est){
@@ -264,7 +264,11 @@ get_variables(mod_best)
 # plot fitted b
 mat.c <- data.frame(mat.c =unique(d$mat.c))
 
-mat_raw <- abiotic %>% select(Site, mat.c) %>% rename(siteID = Site,mat_raw = mat.c) %>% left_join(abiotic_s %>% select(siteID, mat.c)) %>%
+mat_raw <- abiotic %>%
+  select(Site, mat.c) %>%
+  rename(siteID = Site,mat_raw = mat.c) %>%
+  left_join(abiotic_s %>%
+              select(siteID, mat.c)) %>%
   select(-siteID) %>% 
   right_join(mat.c) %>% 
   distinct(mat.c, mat_raw)
@@ -288,7 +292,8 @@ mat_raw <- abiotic %>% select(Site, mat.c) %>% rename(siteID = Site,mat_raw = ma
   scale_fill_viridis_c(option = "plasma") +
   theme_bw() +
   labs(y = "Site",
-       x = "ISD exponent") +
+       x = "ISD exponent",
+       fill = expression("Mean Annual\nTemperature " ( degree*C))) +
   NULL)
 
 #ggsave("plots/b_mat_c_post_dist.jpg")
@@ -330,8 +335,11 @@ mod_best %>%
   slice(1, n())
 
 
-post_fits <- fitted(mod_best, newdata = data.frame(mat.c = unique(d$mat.c)),
-                    re_formula = NA) %>% as_tibble() %>% clean_names() %>% 
+post_fits <- fitted(mod_best,
+                    newdata = data.frame(mat.c = unique(d$mat.c)),
+                    re_formula = NA) %>%
+  as_tibble() %>%
+  clean_names() %>% 
   mutate(mat.c = unique(d$mat.c)) %>% 
   left_join(mat_raw)
 
