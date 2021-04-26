@@ -1,9 +1,12 @@
 # 1 - Download and wrangle Neon Data
 
 # this is the script that was used to download the data presented in the manuscript. 
-# !!!!!! HOWEVER !!!!!!
-# the NEON dataportal is live, and data may be updated or ammended in the future. I include this script here for future use, and to aid in the access to NEON data. 
+
+# However, the NEON dataportal is live, and data may be updated or ammended in the future. I include this script here for future use, and to aid in the access to NEON data. 
+
+### PLEASE NOTE ###
 # If you would like to recreate the results presented in the manuscript, I recommend you DO NOT RUN THIS SCRIPT!
+
 # instead, you can work directly with the data used for the analysis by downloading it from [<insert data dryad URL here once archived>] and skipping to script 2_mle_bin_full_data.R
 
 library(neonUtilities)
