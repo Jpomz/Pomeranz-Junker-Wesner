@@ -46,7 +46,25 @@ sapply(abiotic[,-1], range)
 sapply(abiotic[,-1], quantile, probs = c(0.05, 0.95))
 
 
+## make SI heatmap correlation matrix
+cormat <- round(cor(abiotic[,c(-1,-4, -6, -9)]), 2)
 
+lower_tri <- cormat
+lower_tri[lower.tri(lower_tri)] <- NA
+#diag(lower_tri) <- NA
+
+melted_cormat <- reshape2::melt(lower_tri, na.rm = TRUE)
+ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
+  geom_tile(color = "white") +
+  scale_fill_viridis_c(option = "G") +
+  geom_text(aes(Var2, Var1, label = value), color = "white", size = 4) +
+  theme_bw() +
+  labs(y = NULL, x = NULL)
+
+ggsave("plots/SI_corr_matrix.jpg",
+       dpi = 600,
+       width = 7,
+       height = 5)
 # MLEbins exponent models -------------------------------------------------
 
 
