@@ -96,12 +96,12 @@ saveRDS(mod4, file = "models_jsw/mod4.rds")
 saveRDS(mod5, file = "models_jsw/mod5.rds")
 saveRDS(mod6, file = "models_jsw/mod6.rds")
 
-mod1 <- readRDS(file = "models_jsw/mod1.rds")
-mod2 <- readRDS(file = "models_jsw/mod2.rds")
-mod3 <- readRDS(file = "models_jsw/mod3.rds")
-mod4 <- readRDS(file = "models_jsw/mod4.rds")
-mod5 <- readRDS(file = "models_jsw/mod5.rds")
-mod6 <- readRDS(file = "models_jsw/mod6.rds")
+# mod1 <- readRDS(file = "models_jsw/mod1.rds")
+# mod2 <- readRDS(file = "models_jsw/mod2.rds")
+# mod3 <- readRDS(file = "models_jsw/mod3.rds")
+# mod4 <- readRDS(file = "models_jsw/mod4.rds")
+# mod5 <- readRDS(file = "models_jsw/mod5.rds")
+# mod6 <- readRDS(file = "models_jsw/mod6.rds")
 
 
 # leave-one-out cross validation with bayesian stacking weights
@@ -138,12 +138,12 @@ saveRDS(loo_5, file = "models_jsw/loo_5.rds")
 saveRDS(loo_6, file = "models_jsw/loo_6.rds")
 
 
-loo_1 <- readRDS(file = "models_jsw/loo_1.rds")
-loo_2 <- readRDS(file = "models_jsw/loo_2.rds")
-loo_3 <- readRDS(file = "models_jsw/loo_3.rds")
-loo_4 <- readRDS(file = "models_jsw/loo_4.rds")
-loo_5 <- readRDS(file = "models_jsw/loo_5.rds")
-loo_6 <- readRDS(file = "models_jsw/loo_6.rds")
+# loo_1 <- readRDS(file = "models_jsw/loo_1.rds")
+# loo_2 <- readRDS(file = "models_jsw/loo_2.rds")
+# loo_3 <- readRDS(file = "models_jsw/loo_3.rds")
+# loo_4 <- readRDS(file = "models_jsw/loo_4.rds")
+# loo_5 <- readRDS(file = "models_jsw/loo_5.rds")
+# loo_6 <- readRDS(file = "models_jsw/loo_6.rds")
 
 # note on warnings:
 # reloo uses the future package internally, and the future package recently updated to throw a warning when random numbers are generated.
@@ -188,11 +188,15 @@ write_csv(coef_mods_table, "results/all_biomass_model_coef.csv")
 
 
 # Rerun temp model with prior samples and save
-mod_best <- update(mod5,
+mod_best_3 <- update(mod3,
                    sample_prior = TRUE, iter = 1000, chains = 4)
-# saveRDS(mod_best, "results/mod_best_biomass.RDS")
-#mod_best <- readRDS("results/log_mg_mat_can_brms.RDS")
+mod_best_6 <- update(mod6,
+                     sample_prior = TRUE, iter = 1000, chains = 4)
 
+# saveRDS(mod_best_3, "results/mod_best_biomass_3.RDS")
+# saveRDS(mod_best_6, "results/mod_best_biomass_6.RDS")
+# mod3 <- readRDS("results/mod_best_biomass_3.RDS")
+# mod6 <- readRDS("results/mod_best_biomass_6.RDS")
 
 mod_avg_params <- posterior_average(mod3, mod6, weights = "stacking") %>% 
   clean_names() %>% as_tibble()
@@ -302,7 +306,11 @@ mod_avg <- pp_average(mod3, mod6,
 
 mat.c <- data.frame(mat.c =unique(d$mat.c))
 
-mat_raw <- abiotic %>% select(Site, mat.c) %>% rename(siteID = Site,mat_raw = mat.c) %>% left_join(abiotic_s %>% select(siteID, mat.c)) %>%
+mat_raw <- abiotic %>%
+  select(Site, mat.c) %>%
+  rename(siteID = Site,mat_raw = mat.c) %>%
+  left_join(abiotic_s %>%
+              select(siteID, mat.c)) %>%
   select(-siteID) %>% 
   right_join(mat.c) %>% 
   distinct(mat.c, mat_raw)
