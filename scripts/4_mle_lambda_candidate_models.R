@@ -163,13 +163,6 @@ loo_6 <- loo(mod6,
              seed = TRUE,
              cores = 6)
 
-# note on warnings:
-# reloo uses the future package internally, and the future package recently updated to throw a warning when random numbers are generated.
-# It seems like the warnings can be ignored based on this post: https://discourse.mc-stan.org/t/psis-loo-warns-about-an-unreliable-value/19437/2
-
-# Allegedly you should be able to set seed=TRUE for the future package, but can't figure out how to do it. 
-
-# The results I got previously (before the update) were similar for now, I'm using as-is
 
 (b_weights <- loo_model_weights(
   list(global1 = loo_1,

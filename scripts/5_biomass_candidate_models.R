@@ -55,10 +55,6 @@ mod1 <- brm(data = d,
               # log-link exponentiates
               c(prior(normal(0, 1),
                       class = "b"),
-                # 95% of intercept prior between 
-                # -3.5 and 0.5
-                # i.e., exponent value at mean values of
-                # all standardized variables 
                 prior(normal(0,2), 
                       class = "Intercept"),
                 prior(exponential(1),
@@ -88,7 +84,9 @@ mod6 <- update(mod1,
                formula. = . ~ . -map.mm,
                cores = 8)
 
-dir.create("models_jsw")
+if(!dir.exists("models_jsw")){
+  dir.create("models_jsw")
+  }
 saveRDS(mod1, file = "models_jsw/mod1.rds")
 saveRDS(mod2, file = "models_jsw/mod2.rds")
 saveRDS(mod3, file = "models_jsw/mod3.rds")
@@ -198,8 +196,9 @@ mod_best_6 <- update(mod6,
 # mod3 <- readRDS("results/mod_best_biomass_3.RDS")
 # mod6 <- readRDS("results/mod_best_biomass_6.RDS")
 
-mod_avg_params <- posterior_average(mod3, mod6, weights = "stacking") %>% 
-  clean_names() %>% as_tibble()
+mod_avg_params <- posterior_average(mod3, mod6, weights = "stacking") %>%
+  clean_names() %>%
+  as_tibble()
 
 mod_avg_b <- mod_avg_params %>% 
   select(b_intercept, b_mat_c) %>% 
@@ -248,7 +247,8 @@ mod_avg_params %>% select(!contains("site")) %>%
 
 
 #site_specific posteriors from model averaged
-mod_avg_site <- mod_avg_params %>% select(!contains(c("shape", "year", "sd_site"))) %>% 
+mod_avg_site <- mod_avg_params %>%
+  select(!contains(c("shape", "year", "sd_site"))) %>% 
   pivot_longer(cols = c(-b_intercept, -b_mat_c)) %>% 
   mutate(siteID = str_to_upper(str_sub(name, 11,14))) %>% 
   left_join(d %>% select(siteID, mat.c) %>% distinct()) %>% 
