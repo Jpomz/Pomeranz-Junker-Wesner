@@ -54,7 +54,8 @@ mod1 <- brm(data = d,
             chains = 4, 
             sample_prior = FALSE,
             iter = 2000,
-            cores = 4)
+            cores = 4,
+            control = list(adapt_delta = 0.99))
 
 # global - TDN
 mod2 <- update(mod1, formula. = . ~ . -tdn-
@@ -117,53 +118,54 @@ mod16 <- update(mod1, formula. = . ~ .-map.mm -tdp - tdn -canopy-
                 cores = 4)
 
 # summarize model coefficients for SI ####
-coef_mods_list <- list(mod1= as.data.frame(fixef(mod1)),
-                       mod2= as.data.frame(fixef(mod2)),
-                       mod3= as.data.frame(fixef(mod3)),
-                       mod4= as.data.frame(fixef(mod4)),
-                       mod5= as.data.frame(fixef(mod5)),
-                       mod6= as.data.frame(fixef(mod6)),
-                       mod7= as.data.frame(fixef(mod7)),
-                       mod8= as.data.frame(fixef(mod8)),
-                       mod9= as.data.frame(fixef(mod9)),
-                       mod10= as.data.frame(fixef(mod10)),
-                       mod11= as.data.frame(fixef(mod11)),
-                       mod12= as.data.frame(fixef(mod12)),
-                       mod13= as.data.frame(fixef(mod13)),
-                       mod14= as.data.frame(fixef(mod14)),
-                       mod15= as.data.frame(fixef(mod15)),
-                       mod16= as.data.frame(fixef(mod16)))
-
-coef_names_list <- list(row.names(fixef(mod1)),
-                        row.names(fixef(mod2)),
-                        row.names(fixef(mod3)),
-                        row.names(fixef(mod4)),
-                        row.names(fixef(mod5)),
-                        row.names(fixef(mod6)),
-                        row.names(fixef(mod7)),
-                        row.names(fixef(mod8)),
-                        row.names(fixef(mod9)),
-                        row.names(fixef(mod10)),
-                        row.names(fixef(mod11)),
-                        row.names(fixef(mod12)),
-                        row.names(fixef(mod13)),
-                        row.names(fixef(mod14)),
-                        row.names(fixef(mod15)),
-                        row.names(fixef(mod16)))
-coef_mods_table <- map2(coef_mods_list,
-                        coef_names_list,
-                        ~cbind(.x, coef_name = .y))
-
-coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
-row.names(coef_mods_table) <- NULL
-coef_mods_table[,2:5] <- round(coef_mods_table[,2:5], 3)
-coef_mods_table <- coef_mods_table[,c(1, 6, 2, 4, 5)]
-write_csv(coef_mods_table, "results/SI_interaction_biomass_mods_coef.csv")
+# coef_mods_list <- list(mod1= as.data.frame(fixef(mod1)),
+#                        mod2= as.data.frame(fixef(mod2)),
+#                        mod3= as.data.frame(fixef(mod3)),
+#                        mod4= as.data.frame(fixef(mod4)),
+#                        mod5= as.data.frame(fixef(mod5)),
+#                        mod6= as.data.frame(fixef(mod6)),
+#                        mod7= as.data.frame(fixef(mod7)),
+#                        mod8= as.data.frame(fixef(mod8)),
+#                        mod9= as.data.frame(fixef(mod9)),
+#                        mod10= as.data.frame(fixef(mod10)),
+#                        mod11= as.data.frame(fixef(mod11)),
+#                        mod12= as.data.frame(fixef(mod12)),
+#                        mod13= as.data.frame(fixef(mod13)),
+#                        mod14= as.data.frame(fixef(mod14)),
+#                        mod15= as.data.frame(fixef(mod15)),
+#                        mod16= as.data.frame(fixef(mod16)))
+# 
+# coef_names_list <- list(row.names(fixef(mod1)),
+#                         row.names(fixef(mod2)),
+#                         row.names(fixef(mod3)),
+#                         row.names(fixef(mod4)),
+#                         row.names(fixef(mod5)),
+#                         row.names(fixef(mod6)),
+#                         row.names(fixef(mod7)),
+#                         row.names(fixef(mod8)),
+#                         row.names(fixef(mod9)),
+#                         row.names(fixef(mod10)),
+#                         row.names(fixef(mod11)),
+#                         row.names(fixef(mod12)),
+#                         row.names(fixef(mod13)),
+#                         row.names(fixef(mod14)),
+#                         row.names(fixef(mod15)),
+#                         row.names(fixef(mod16)))
+# coef_mods_table <- map2(coef_mods_list,
+#                         coef_names_list,
+#                         ~cbind(.x, coef_name = .y))
+# 
+# coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
+# row.names(coef_mods_table) <- NULL
+# coef_mods_table[,2:5] <- round(coef_mods_table[,2:5], 3)
+# coef_mods_table <- coef_mods_table[,c(1, 6, 2, 4, 5)]
+# write_csv(coef_mods_table, "results/SI_interaction_biomass_mods_coef.csv")
 
 # model weights ####
 # leave-one-out cross validation with bayesian stacking weights
 loo_1 <- loo(mod1,
              reloo = TRUE,
+             seed = TRUE,
              cores = 6)
 loo_2 <- loo(mod2,
              reloo = TRUE,
@@ -252,9 +254,52 @@ loo_16 <- loo(mod16,
        mod15 = loo_15,
        mod16 = loo_16)))
 
-# mod1 = 0.419
-# mod15 = 0.247
-# mod4 = 0.149
+# adapt_delta = default
+# mod1 = 0.419 #0.05 #0
+# mod15 = 0.247 # similar #0
+# mod4 = 0.149 #? #0.166
+
+# adapt_delta = 0.99
+# mod15 = 0.394
+# mod4 = 0.234
+# mod5 = 0.201
+
+
+loo_model_weights(list(loo_1, loo_2))
+# mod1 = 1.00, 1.00 
+# mod2 = 0, 0
+
+loo_1b <- loo(mod1,
+             #reloo = TRUE,
+             cores = 6)
+loo_2b <- loo(mod2,
+             #reloo = TRUE,
+             #seed = TRUE,
+             cores = 6)
+loo_model_weights(list(loo_1b, loo_2b))
+# mod 1 = 0.829, 1.00
+# mod2 = 0.171, 0.00
+
+loo_1c <- loo(mod1,
+              moment_match = TRUE,
+              #reloo = TRUE,
+              cores = 6)
+loo_2c <- loo(mod2,
+              moment_match = TRUE,
+              #reloo = TRUE,
+              cores = 6)
+loo_model_weights(list(loo_1b, loo_2b))
+# mod1 = 1.00
+# mod2 = 0.00
+
+
+loo_model_weights(list(
+  mod4 = loo_4, 
+  mod5 = loo_5,
+  mod15 = loo_15))
+# mod4 = 0.351, 0.338, 0.338
+# mod5 = 0.270, 0.197, 0.403
+# mod15 = 0.379, 0.465, 0.258
 
 fixef(mod1)
 fixef(mod15)

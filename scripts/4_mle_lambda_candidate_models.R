@@ -8,6 +8,7 @@ library(tidyverse)
 library(brms)
 library(tidybayes)
 library(viridis)
+library(janitor)
 
 # read in explanatory variables
 abiotic <- read.csv("data/abiotic.csv")
@@ -23,48 +24,13 @@ abiotic_s$siteID <- abiotic$Site
 MLEbins <- readRDS("data/MLEbins.RDS")
 MLEbins <- MLEbins[,c("siteID", "ID", "year", "sampleEvent", "b")]
 
-# biomass <- readRDS("data/mean_biomass_latitude.RDS")
-# biomass <- biomass[,c("siteID", "ID",
-#                       "sampleEvent", "u_biomass")]
-# 
+
 # # join data sets
-# d <- left_join(MLEbins, biomass)
 d <- left_join(MLEbins, abiotic_s)
 
-# log 10 mean dry weight estimate
-#d$log_mg <- log10(d$u_biomass)
-
-# preliminary stuff ---------------------------------------------------
 
 
-cor(abiotic$latitude, abiotic[,c(-1, -9)])
-ab_cor <- cor(abiotic[,c(2,3,4,5,7,8)])
-ifelse(abs(ab_cor)<0.5, 0, ab_cor)
-max(abs(ifelse(abs(ab_cor)==1, 0, ab_cor)))
 
-sapply(abiotic[,-1], range)
-sapply(abiotic[,-1], quantile, probs = c(0.05, 0.95))
-
-
-## make SI heatmap correlation matrix
-cormat <- round(cor(abiotic[,c(-1,-4, -6, -9)]), 2)
-
-lower_tri <- cormat
-lower_tri[lower.tri(lower_tri)] <- NA
-#diag(lower_tri) <- NA
-
-melted_cormat <- reshape2::melt(lower_tri, na.rm = TRUE)
-ggplot(data = melted_cormat, aes(Var2, Var1, fill = value))+
-  geom_tile(color = "white") +
-  scale_fill_viridis_c(option = "G") +
-  geom_text(aes(Var2, Var1, label = value), color = "white", size = 4) +
-  theme_bw() +
-  labs(y = NULL, x = NULL)
-
-ggsave("plots/SI_corr_matrix.jpg",
-       dpi = 600,
-       width = 7,
-       height = 5)
 # MLEbins exponent models -------------------------------------------------
 
 
@@ -85,6 +51,9 @@ mod1 <- brm(data = d,
                       class = "Intercept"),
                 prior(exponential(2),
                       class="sd"),
+                prior(exponential(5),
+                      class="sd",
+                      group = "year"),
                 prior(exponential(2),
                       class="sigma")),
             chains = 4, 
@@ -92,10 +61,49 @@ mod1 <- brm(data = d,
             iter = 6000,
             cores = 4,
             control = list(adapt_delta = 0.99)
-            )
+)
+
+mod1b <- update(mod1,
+                cores = 4)
+
 # temp + nutrients
 mod2 <- update(mod1, formula. = . ~ . -canopy -map.mm,
                cores = 4)
+
+# temp + nutrients
+mod2a <- update(mod1, formula. = . ~ . -canopy -map.mm,
+                cores = 4)
+# temp + nutrients
+mod2b <- update(mod1, formula. = . ~ . -canopy -map.mm,
+                cores = 4)
+# temp + nutrients
+mod2c <- update(mod1, formula. = . ~ . -canopy -map.mm,
+                cores = 4)
+# temp + nutrients
+mod2d <- update(mod1, formula. = . ~ . -canopy -map.mm,
+                cores = 4)
+# coeff variation for MC-forums
+# summarize model coefficients for SI ####
+coef_mods_list <- list(
+  run1 = as.data.frame(fixef(mod2)),
+  run2 = as.data.frame(fixef(mod2a)),
+  run3 = as.data.frame(fixef(mod2b)),
+  run4 = as.data.frame(fixef(mod2c)),
+  run5 = as.data.frame(fixef(mod2d)))
+coef_names_list <- list(
+  row.names(fixef(mod2)),
+  row.names(fixef(mod2a)),
+  row.names(fixef(mod2b)),
+  row.names(fixef(mod2c)),
+  row.names(fixef(mod2d)))
+
+coef_mods_table <- map2(coef_mods_list,
+                        coef_names_list,
+                        ~cbind(.x, coef_name = .y))
+coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
+row.names(coef_mods_table) <- NULL
+coef_mods_table %>% arrange(coef_name, MOD)
+
 # "Climate model" temp + precipitation
 mod3 <- update(mod1, formula. = . ~ . -canopy -tdn -tdp,
                cores = 4)
@@ -103,30 +111,197 @@ mod3 <- update(mod1, formula. = . ~ . -canopy -tdn -tdp,
 mod4 <- update(mod1,
                formula. = . ~ . -map.mm -tdn - tdp,
                cores = 4)
+
+
 # just temperature
 mod5 <- update(mod1,
                formula. = . ~ . -map.mm -tdn -tdp -canopy,
                cores = 4)
+
+# mod5a <- update(mod1,
+#                formula. = . ~ . -map.mm -tdn -tdp -canopy,
+#                cores = 4)
+# just temperature
+mod5b <- update(mod1,
+                formula. = . ~ . -map.mm -tdn -tdp -canopy,
+                cores = 4)
+# just temperature
+mod5c <- update(mod1,
+                formula. = . ~ . -map.mm -tdn -tdp -canopy,
+                cores = 4)
+# just temperature
+mod5d <- update(mod1,
+                formula. = . ~ . -map.mm -tdn -tdp -canopy,
+                cores = 4)
+# coeff variation for MC-forums
+# summarize model coefficients for SI ####
+coef_mods_list <- list(
+  run1 = as.data.frame(fixef(mod5)),
+  run2 = as.data.frame(fixef(mod5a)),
+  run3 = as.data.frame(fixef(mod5b)),
+  run4 = as.data.frame(fixef(mod5c)),
+  run5 = as.data.frame(fixef(mod5d)))
+coef_names_list <- list(
+  row.names(fixef(mod5)),
+  row.names(fixef(mod5a)),
+  row.names(fixef(mod5b)),
+  row.names(fixef(mod5c)),
+  row.names(fixef(mod5d)))
+
+coef_mods_table <- map2(coef_mods_list,
+                        coef_names_list,
+                        ~cbind(.x, coef_name = .y))
+coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
+row.names(coef_mods_table) <- NULL
+coef_mods_table %>% arrange(coef_name, MOD)
+
 # resources - autochthonous resources = TDN +TDP
 # Allochthonous resources = canopy
 mod6 <- update(mod1,
                formula. = . ~ . -map.mm,
                cores = 4)
+mod6b <- update(mod1,
+                formula. = . ~ . -map.mm,
+                cores = 4)
+# tdn interaction
+mod7 <- update(mod1, 
+               formula. = . ~ . -map.mm -tdp - canopy +
+                 mat.c:tdn,
+               cores = 4)
+# tdp interaction
+mod8 <- update(mod1, 
+               formula. = . ~ . -map.mm -tdn - canopy +
+                 mat.c:tdp,
+               cores = 4)
+# models in ms ####
+# save the models for reproducibility
+# saveRDS(mod1, file = "models_jsw/isd_mod1.rds")
+# saveRDS(mod2, file = "models_jsw/isd_mod2.rds")
+# saveRDS(mod3, file = "models_jsw/isd_mod3.rds")
+# saveRDS(mod4, file = "models_jsw/isd_mod4.rds")
+# saveRDS(mod5, file = "models_jsw/isd_mod5.rds")
+# saveRDS(mod6, file = "models_jsw/isd_mod6.rds")
+# saveRDS(mod7, file = "models_jsw/isd_mod7.rds")
+# saveRDS(mod8, file = "models_jsw/isd_mod8.rds")
 
+# coefficient estimates may vary due to random sampling in the model fitting procedure. To exactly recreate the results presented in the manuscript, load the following objects:
+# mod1 <- readRDS( file = "models_jsw/isd_mod1.rds")
+# mod2 <- readRDS( file = "models_jsw/isd_mod2.rds")
+# mod3 <- readRDS( file = "models_jsw/isd_mod3.rds")
+# mod4 <- readRDS( file = "models_jsw/isd_mod4.rds")
+# mod5 <- readRDS( file = "models_jsw/isd_mod5.rds")
+# mod6 <- readRDS( file = "models_jsw/isd_mod6.rds")
+# mod7 <- readRDS( file = "models_jsw/isd_mod7.rds")
+# mod8 <- readRDS( file = "models_jsw/isd_mod8.rds")
+
+# loo ####
+# # leave-one-out cross validation with bayesian stacking weights
+# this takes a long time to run, commenting out for now. 
+# loo_1 <- loo(mod1,
+#              reloo = TRUE,
+#              seed  = TRUE,
+#              cores = 6)
+# loo_2 <- loo(mod2,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+# loo_3 <- loo(mod3,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+# loo_4 <- loo(mod4,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+# loo_5 <- loo(mod5,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+# loo_6 <- loo(mod6,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+# loo_7 <- loo(mod7,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+# loo_8 <- loo(mod8,
+#              reloo = TRUE,
+#              seed = TRUE,
+#              cores = 6)
+
+loo_1 <- loo(mod1,
+             reloo = TRUE,
+             seed  = TRUE,
+             cores = 6)
+
+loo_1b <- loo(mod1b,
+              reloo = TRUE,
+              seed  = TRUE,
+              cores = 6)
+
+loo_5 <- loo(mod5,
+             reloo = TRUE,
+             seed  = TRUE,
+             cores = 6)
+
+loo_5b <- loo(mod5b,
+              reloo = TRUE,
+              seed  = TRUE,
+              cores = 6)
+loo_6 <- loo(mod6,
+             reloo = TRUE,
+             seed  = TRUE,
+             cores = 6)
+
+loo_6b <- loo(mod6b,
+              reloo = TRUE,
+              seed  = TRUE,
+              cores = 6)
+
+loo_model_weights(list(mod1 = loo_1, mod5 = loo_5, mod6 = loo_6))
+loo_model_weights(list(mod1b = loo_1b, mod5b = loo_5b, mod6b = loo_6b))
+
+loo_compare(loo_1, loo_5, loo_6)
+loo_compare(loo_1b, loo_5b, loo_6b)
+
+
+loo_compare(loo_1, loo_1b, loo_5, loo_5b, loo_6, loo_6b)
+
+# dir.create("stan_forum")
+# saveRDS(mod1, "stan_forum/mod1_5_20.RDS")
+# saveRDS(mod1b, "stan_forum/mod1b_5_20.RDS")
+# saveRDS(mod5, "stan_forum/mod5_5_20.RDS")
+# saveRDS(mod5b, "stan_forum/mod5b_5_20.RDS")
+# saveRDS(mod6, "stan_forum/mod6_5_20.RDS")
+# saveRDS(mod6b, "stan_forum/mod6b_5_20.RDS")
+# saveRDS(loo_1, "stan_forum/loo1_5_20.RDS")
+# saveRDS(loo_1b, "stan_forum/loo1b_5_20.RDS")
+# saveRDS(loo_5, "stan_forum/loo5_5_20.RDS")
+# saveRDS(loo_5b, "stan_forum/loo5b_5_20.RDS")
+# saveRDS(loo_6, "stan_forum/loo6_5_20.RDS")
+# saveRDS(loo_6b, "stan_forum/loo6b_5_20.RDS")
 
 # summarize model coefficients for SI ####
-coef_mods_list <- list(global = as.data.frame(fixef(mod1)),
-                       nutrient = as.data.frame(fixef(mod2)),
-                       Climate  = as.data.frame(fixef(mod3)),
-                       canopy = as.data.frame(fixef(mod4)),
-                       T_only = as.data.frame(fixef(mod5)),
-                       resources = as.data.frame(fixef(mod6)))
-coef_names_list <- list(row.names(fixef(mod1)),
-                        row.names(fixef(mod2)),
-                        row.names(fixef(mod3)),
-                        row.names(fixef(mod4)),
-                        row.names(fixef(mod5)),
-                        row.names(fixef(mod6)))
+coef_mods_list <- list(
+  global = as.data.frame(fixef(mod1)),
+  nutrient = as.data.frame(fixef(mod2)),
+  Climate  = as.data.frame(fixef(mod3)),
+  canopy = as.data.frame(fixef(mod4)),
+  T_only = as.data.frame(fixef(mod5)),
+  resources = as.data.frame(fixef(mod6)),
+  tdn_interaction = as.data.frame(fixef(mod7)),
+  tdp_interaction = as.data.frame(fixef(mod8)))
+coef_names_list <- list(
+  row.names(fixef(mod1)),
+  row.names(fixef(mod2)),
+  row.names(fixef(mod3)),
+  row.names(fixef(mod4)),
+  row.names(fixef(mod5)),
+  row.names(fixef(mod6)),
+  row.names(fixef(mod7)),
+  row.names(fixef(mod8)))
+
 coef_mods_table <- map2(coef_mods_list,
                         coef_names_list,
                         ~cbind(.x, coef_name = .y))
@@ -135,58 +310,72 @@ coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
 row.names(coef_mods_table) <- NULL
 coef_mods_table[,2:5] <- round(coef_mods_table[,2:5], 3)
 coef_mods_table <- coef_mods_table[,c(1, 6, 2, 4, 5)]
+coef_mods_table <- pivot_wider(coef_mods_table,
+                               names_from = coef_name,
+                               values_from = 3:5)
+coef_mods_table <- coef_mods_table[,c(1,
+                                      2, 10, 18,
+                                      3, 11, 19,
+                                      4, 12, 20,
+                                      5, 13, 21,
+                                      6, 14, 22,
+                                      7, 15, 23,
+                                      8, 16, 24,
+                                      9, 17, 25)]
 write_csv(coef_mods_table, "results/all_b_model_coef.csv")
 
-# model weights ####
-# leave-one-out cross validation with bayesian stacking weights
-loo_1 <- loo(mod1,
-             reloo = TRUE,
-             cores = 6)
-loo_2 <- loo(mod2,
-             reloo = TRUE,
-             seed = TRUE,
-             cores = 6)
-loo_3 <- loo(mod3,
-             reloo = TRUE,
-             seed = TRUE,
-             cores = 6)
-loo_4 <- loo(mod4,
-             reloo = TRUE,
-             seed = TRUE,
-             cores = 6)
-loo_5 <- loo(mod5,
-             reloo = TRUE,
-             seed = TRUE,
-             cores = 6)
-loo_6 <- loo(mod6,
-             reloo = TRUE,
-             seed = TRUE,
-             cores = 6)
+# interaction plots ####
+tdn_plot <- plot(
+  conditional_effects(
+    mod7,
+    effects = "mat.c:tdn"))
 
+tdn_plot$`mat.c:tdn`$data %>%
+  ggplot(aes(x = 10.6 + 7.9 *mat.c, y = estimate__,
+             ymin = lower__,
+             ymax = upper__,
+             color = effect2__,
+             fill = effect2__)) +
+  geom_line() +
+  geom_ribbon(alpha = 0.2, color = NA) +
+  theme_bw() +
+  scale_fill_discrete(labels = c("High", "Medium", "Low")) +
+  scale_color_discrete(labels = c("High", "Medium", "Low")) +
+  labs(x = expression("Mean Annual Temperature " ( degree*C)),
+       y ="ISD exponent",
+       fill = "TDN level",
+       color = "TDN level")
 
-(b_weights <- loo_model_weights(
-  list(global1 = loo_1,
-       T_nutr2 = loo_2,
-       Clim = loo_3,
-       T_can = loo_4,
-       T_only = loo_5,
-       resource = loo_6)))
+ggsave(file = "plots/SI_tdn_interaction.jpg",
+       width = 7,
+       height = 3.5,
+       units = "in")
 
-round(fixef(mod1), 3)
-round(fixef(mod2), 3)
-round(fixef(mod3), 3)
-round(fixef(mod4), 3)
-round(fixef(mod5), 3)
-round(fixef(mod6), 3)
+tdp_plot <- plot(
+  conditional_effects(
+    mod8,
+    effects = "mat.c:tdp"))
 
-# Rerun best model with prior samples
-# "best" model is mod
-mod_best <- update(mod5,
-                   sample_prior = TRUE)
+tdp_plot$`mat.c:tdp`$data %>%
+  ggplot(aes(x = 10.6 + 7.9 *mat.c, y = estimate__,
+             ymin = lower__,
+             ymax = upper__,
+             color = effect2__,
+             fill = effect2__)) +
+  geom_line() +
+  geom_ribbon(alpha = 0.2, color = NA) +
+  theme_bw() +
+  scale_fill_discrete(labels = c("High", "Medium", "Low")) +
+  scale_color_discrete(labels = c("High", "Medium", "Low")) +
+  labs(x = expression("Mean Annual Temperature " ( degree*C)),
+       y = "ISD exponent",
+       fill = "TDP level",
+       color = "TDP level")
 
-
-saveRDS(mod_best, "results/b_mat_c_brms.RDS")
-#mod_best <- readRDS("results/b_mat_c_brms.RDS")
+ggsave(file = "plots/SI_tdp_interaction.jpg",
+       width = 7,
+       height = 3.5,
+       units = "in")
 
 # function to calculate probability that coef is < or > 0
 beta_0 <- function(model, b_est){
@@ -196,65 +385,100 @@ beta_0 <- function(model, b_est){
   list(less = less, more = more)
 }
 
-# summary of candidate models ####
+beta_0(mod7, "b_mat.c:tdn")
+beta_0(mod8, "b_mat.c:tdp")
+fixef(mod8)
 
-temp_beta_b <- bind_rows(fixef(mod1)["mat.c",],
-                         fixef(mod2)["mat.c",],
-                         fixef(mod3)["mat.c",],
-                         fixef(mod4)["mat.c",],
-                         fixef(mod5)["mat.c",],
-                         fixef(mod6)["mat.c",])
-temp_beta_b$prob_less_0 <- c(
-  beta_0(mod1, "b_mat.c")$less,
-  beta_0(mod2, "b_mat.c")$less,
-  beta_0(mod3, "b_mat.c")$less,
-  beta_0(mod4, "b_mat.c")$less,
-  beta_0(mod5, "b_mat.c")$less,
-  beta_0(mod6, "b_mat.c")$less)
+# model average -----------------------------------------------------------
 
-temp_beta_b$mod <- c("Global",
-                     "Nutrient",
-                     "Climate",
-                     "Canopy",
-                     "MAT.c",
-                     "Resources")
-temp_beta_b$weight <- round(b_weights, 3)
-saveRDS(temp_beta_b, "results/b_mat_coef_table.RDS")
-temp_beta_b <- readRDS("results/b_mat_coef_table.RDS")
+mod_avg_params <- posterior_average(
+  mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8,
+  weights = "stacking") %>%
+  clean_names() %>%
+  as_tibble()
 
-# summary of best model ####
+(mod_avg_b <- mod_avg_params %>% 
+    select(b_intercept, b_mat_c) %>% 
+    pivot_longer(cols = everything()) %>% 
+    group_by(name) %>% 
+    summarize(median = median(value),
+              upper = quantile(value, probs = 0.975),
+              lower = quantile(value, probs = 0.025)))
 
-# probability that ISD exponent is negatively related to mat.c
-beta_0(mod_best, "b_mat.c")$less
+# "averaged" model coefficients, probability < 0
+mod_avg_params %>%
+  select(!contains("site")) %>%
+  summarize(across(everything(), ~sum(.x<0))/nrow(.))
 
-# Range of site-specific median ISD exponents
-mod_best %>%
-  spread_draws(b_Intercept,
-               r_siteID[siteID, term],
-               r_year[year, term],
-               b_mat.c) %>%
-  filter(.iteration < 1000) %>%
-  left_join(abiotic_s[,c("mat.c", "siteID")]) %>%
-  mutate(
-    fitted_b =
-      (b_Intercept + r_siteID + r_year) + #intercept
-      b_mat.c * mat.c) %>%
-  group_by(siteID) %>%
-  summarize(med_isd = median(fitted_b)) %>%
-  arrange(med_isd) %>%
-  slice(c(1, n()))
 
-# plots with tidybayes ----------------------------------------------------
+#site_specific posteriors from model averaged
+mod_avg_site <- mod_avg_params %>%
+  select(!contains(c("shape", "year", "sd_site", "sigma"))) %>% 
+  pivot_longer(cols = c(-b_intercept, -b_mat_c)) %>% 
+  mutate(siteID = str_to_upper(str_sub(name, 11,14))) %>% 
+  left_join(d %>%
+              select(siteID, mat.c) %>%
+              distinct()) %>%
+  mutate(isd = b_intercept + b_mat_c*mat.c + value)
 
+
+# Range of site-specific median biomass
+mod_avg_site %>% 
+  group_by(siteID) %>% 
+  summarize(median = median(isd)) %>% 
+  slice(c(which.min(median), which.max(median)))
+
+
+
+# plots ----------------------------------------------------
+
+# data for fig 3A ####
 # create plots directory, if it doesn't already exist. 
 if(!dir.exists("plots")){
   dir.create("plots")
 }
 
-# plots with tidybayes
-get_variables(mod_best)
+mod_avg_site_raw <-mod_avg_site %>% 
+  left_join(abiotic %>%
+              select(Site, mat.c) %>%
+              rename(siteID = Site,mat_raw = mat.c))
 
-# plot fitted b
+# plot densities
+(isd_dist_plot <- mod_avg_site_raw %>% 
+    ggplot(aes(x = isd,
+               fill = mat_raw,
+               y = reorder(siteID, mat_raw))) +
+    stat_halfeye() +
+    scale_fill_viridis_c(
+      option = "plasma", 
+      name = 
+        expression("Mean Annual\nTemperature " ( degree*C))) +
+    theme_bw() +
+    xlim(c(-1.7, -0.9)) +
+    labs(y = "Site",
+         x = "ISD exponent") +
+    NULL)
+
+
+saveRDS(isd_dist_plot, "plots/b_post_dist.RDS")
+
+
+# data for figure 2A
+# compute model average across temp, holding everything else to average (i.e., 0).
+# Gives an error about pareto-k. But for all models, the pareto k diagnostics are good or ok using print(loo_1), print(loo_2), etc. So ignore
+
+mod_avg <- pp_average(
+  mod1, mod2, mod3, mod4, mod5, mod6, mod7, mod8,
+  newdata = data.frame(mat.c = unique(d$mat.c),
+                       tdn = 0,
+                       tdp = 0,
+                       map.mm = 0,
+                       canopy = 0),
+  re_formula = NA,
+  method = 'pp_expect') %>%
+  as_tibble() %>%
+  clean_names() 
+
 mat.c <- data.frame(mat.c =unique(d$mat.c))
 
 mat_raw <- abiotic %>%
@@ -266,89 +490,26 @@ mat_raw <- abiotic %>%
   right_join(mat.c) %>% 
   distinct(mat.c, mat_raw)
 
-(b_post_plot <- mod_best %>%
-  spread_draws(b_Intercept,
-               r_siteID[siteID, term],
-               r_year[year, term],
-               b_mat.c) %>%
-  filter(.iteration < 1000) %>%
-  left_join(abiotic_s[,c("mat.c", "siteID")]) %>%
-  mutate(
-    fitted_b =
-      (b_Intercept + r_siteID + r_year) + #intercept
-      b_mat.c * mat.c) %>%
-  left_join(mat_raw) %>% 
-  ggplot(aes(x = fitted_b,
-             fill = mat_raw,
-             y = reorder(siteID, mat_raw))) +
-  stat_halfeye() +
-  scale_fill_viridis_c(option = "plasma") +
-  theme_bw() +
-  labs(y = "Site",
-       x = "ISD exponent",
-       fill = expression("Mean Annual\nTemperature " ( degree*C))) +
-  NULL)
-
-#ggsave("plots/b_mat_c_post_dist.jpg")
-saveRDS(b_post_plot, "plots/b_mat_c_post_dist.RDS")
-
-# global median of exponent
-mod_best %>%
-  spread_draws(b_Intercept,
-               r_siteID[siteID, term],
-               r_year[year, term],
-               b_mat.c) %>%
-  left_join(abiotic_s[,c("mat.c", "siteID")]) %>%
-  mutate(
-    fitted_b =
-      (b_Intercept + r_siteID + r_year) +
-      b_mat.c * mat.c) %>%
-  ungroup() %>%
-  summarize(est = median(fitted_b),
-            lower = quantile(fitted_b, probs = 0.05),
-            upper = quantile(fitted_b, probs = 0.95))
-
-# Site-specific medians
-mod_best %>%
-  spread_draws(b_Intercept,
-               r_siteID[siteID, term],
-               r_year[year, term],
-               b_mat.c) %>%
-  left_join(abiotic_s[,c("mat.c", "siteID")]) %>%
-  mutate(
-    fitted_b =
-      (b_Intercept + r_siteID) +
-      b_mat.c * mat.c) %>%
-  ungroup() %>%
-  group_by(siteID) %>%
-  summarize(est = median(fitted_b),
-            lower = quantile(fitted_b, probs = 0.05),
-            upper = quantile(fitted_b, probs = 0.95)) %>%
-  arrange(est) %>%
-  slice(1, n())
-
-
-post_fits <- fitted(mod_best,
-                    newdata = data.frame(mat.c = unique(d$mat.c)),
-                    re_formula = NA) %>%
-  as_tibble() %>%
-  clean_names() %>% 
-  mutate(mat.c = unique(d$mat.c)) %>% 
-  left_join(mat_raw)
-
-(b_fit_plot <- post_fits %>% 
-    ggplot(aes(x = mat_raw)) + 
-    geom_ribbon(aes(ymin = q2_5, ymax = q97_5), alpha = 0.2) + 
-    geom_line(aes(y = estimate)) + 
-    geom_point(data = d %>% left_join(mat_raw), aes(color = mat_raw, y = b),
-             size = 2.5, 
-             alpha = 0.8) +
-  scale_color_viridis_c(option = "plasma") +
+# plot model_averaged biomass vs mat raw coefficient
+(isd_fit_mat <- mod_avg %>%
+    mutate(mat.c = mat_raw$mat.c,
+           mat_raw = mat_raw$mat_raw) %>% 
+    ggplot(aes(
+      x = mat_raw, 
+      y = estimate)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = q2_5, ymax = q97_5), alpha = 0.2) +
+    scale_fill_manual(values = c("gray80")) +
+    # scale_fill_grey()+#start = 0.2, end = 0.7) +
+    geom_point(data = d %>% left_join(mat_raw),
+               aes(y = b,
+                   color = mat_raw),
+               size = 2.5, 
+               alpha = 0.8) +
+    scale_color_viridis_c(option = "plasma") +
+    theme_bw() +
     guides(color = F) +
-  labs(y = "ISD exponent",
-       x = expression("Mean Annual Temperature " ( degree*C)),
-       color = "Temperature") +
-  theme_bw() )
+    labs(x = expression("Mean Annual Temperature " ( degree*C)),
+         y = "ISD exponent"))
 
-#ggsave("plots/b_mat_c.jpg")
-saveRDS(b_fit_plot, "plots/b_mat_c.RDS")
+saveRDS(isd_fit_mat, "plots/isd_fit.RDS")

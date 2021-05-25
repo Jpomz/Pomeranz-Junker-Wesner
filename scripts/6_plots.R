@@ -59,8 +59,7 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                 scale_color_viridis_c(option = "plasma") +
                 labs(color = expression("Mean Annual\nTemperature " ( degree*C))) +
                 guides(fill = F) +
-                theme_void()
-)
+                theme_void())
 
 ggsave(map,
        file = "plots/map.png",
@@ -72,7 +71,7 @@ ggsave(map,
 # Figure 2 main text ------------------------------------------------------
 
 # #load models
-b_mat_c_brms <- readRDS("results/b_mat_c_brms.RDS")
+#b_mat_c_brms <- readRDS("results/b_mat_c_brms.RDS")
 #log_mg_mat_can_brms <- readRDS("results/log_mg_mat_can_brms.RDS")
 # 
 # #extract conditional effects
@@ -89,51 +88,11 @@ b_mat_c_brms <- readRDS("results/b_mat_c_brms.RDS")
 # mat_c_data <- b_mat_c_brms$data 
 # log_mg_data <- log_mg_mat_can_brms$data
 # 
-# 
-# #plot main figure
-# 
-# 
-# c2 <- ggplot(data = mat_c_data, aes(x = mat.c, y = b)) +
-#         geom_ribbon(data = bmat_cond.df,
-#                     aes(ymax = upper__,
-#                         ymin = lower__),
-#                     alpha = 0.2) +
-#         geom_line(data = bmat_cond.df, aes(y = estimate__),
-#                   size = 1) +
-#         geom_point(aes(color = mat.c),
-#                    size = 1.5) +
-#         scale_color_viridis(option = 'C') +
-#         theme_bw() +
-#         theme(legend.position = "none") +
-#         labs(y = "ISD exponent",
-#              x = "Standardized Mean Annual Temperature") +
-#         guides(color = F) +
-#         theme(axis.title.x = element_blank())
-# 
-# 
-# d2 <- ggplot(data = log_mg_data,
-#              aes(x = mat.c,
-#                  y = log_mg)) +
-#         geom_ribbon(data = log_mg_cond.df,
-#                     aes(ymax = upper__,
-#                         ymin = lower__),
-#                     alpha = 0.2) +
-#         geom_line(data = log_mg_cond.df,
-#                   aes(y = estimate__),
-#                   size = 1) +
-#         geom_point(aes(color = mat.c),
-#                    size = 1.5) +
-#         scale_color_viridis(option = 'C') +
-#         theme_bw() +
-#         labs(y = expression(
-#                 "Log10 Dry Mass mg/"~m^2),
-#              x = "Standardized Mean Annual Temperature") +
-#         theme(legend.position = "top")
 
 #plot main figure
 
-c2 <- readRDS("plots/b_mat_c.RDS")
-d2 <- readRDS("plots/log_mg_mat.RDS")
+c2 <- readRDS("plots/isd_fit.RDS")
+d2 <- readRDS("plots/biomass_fit.RDS")
 
 
 main_plot <- plot_grid(
@@ -180,8 +139,8 @@ ggsave(main_plot,
 
 #extract posts with custom function
 
-e3 <- readRDS("plots/b_mat_c_post_dist.RDS")
-f3 <- readRDS("plots/log_mg_mat_canopy_post_dist.RDS")
+e3 <- readRDS("plots/b_post_dist.RDS")
+f3 <- readRDS("plots/biomass_post_dist.RDS")
 
 
 post_plot <- plot_grid(
@@ -197,7 +156,7 @@ post_plot <- plot_grid(
         align = "h",
         axis = "b",
         labels = "auto",
-        rel_widths = c(1, 1.3))
+        rel_widths = c(1, 1.5))
 
 post_plot
 
@@ -221,12 +180,15 @@ lit <- read_csv("data/temp_summaries_table.csv") %>%
 
 library(ggthemes)
 
-range_bmat <- fitted(b_mat_c_brms,
-                     newdata = data.frame(
-                             mat.c = c(min(b_mat_c_brms$data$mat.c),
-                                       max(b_mat_c_brms$data$mat.c))),
-                     re_formula = NA,
-                     summary = FALSE) %>% 
+# temperature only model
+b_mat_c_brms <- readRDS( file = "models_jsw/isd_mod5.rds")
+range_bmat <- fitted(
+        b_mat_c_brms,
+        newdata = data.frame(
+                mat.c = c(min(b_mat_c_brms$data$mat.c),
+                          max(b_mat_c_brms$data$mat.c))),
+        re_formula = NA,
+        summary = FALSE) %>% 
         as.data.frame() %>%
         rename(min = V1, max = V2) %>% 
         mutate(abs_diff = abs(min - max))
@@ -284,7 +246,11 @@ range_bmat_summary <- range_bmat %>%
                 ylim(0,1))
 
 
-ggsave(lit_plot, file = "plots/lit_plot.jpg", width = 9, height = 3.5, units = "in")
+ggsave(lit_plot,
+       file = "plots/lit_plot.jpg",
+       width = 9,
+       height = 3.5, 
+       units = "in")
 
 
 
