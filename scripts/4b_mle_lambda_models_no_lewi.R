@@ -194,11 +194,12 @@ ggsave(file = "plots/SI_ISD_post_no_lewi.jpg",
 
 mod_avg <- pp_average(
   mod1b, mod2b, mod3b, mod4b, mod5b, mod6b, mod7b, mod8b,
-  newdata = data.frame(mat.c = unique(d_no_lewi$mat.c),
-                       tdn = 0,
-                       tdp = 0,
-                       map.mm = 0,
-                       canopy = 0),
+  newdata = data.frame(
+    mat.c = unique(d_no_lewi$mat.c),
+    tdn = 0,
+    tdp = 0,
+    map.mm = 0,
+    canopy = 0),
   re_formula = NA,
   method = 'pp_expect') %>%
   as_tibble() %>%

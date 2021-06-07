@@ -24,21 +24,14 @@ abiotic_s <- as.data.frame(abiotic_s)
 abiotic_s$siteID <- abiotic$Site
 
 # # read in b-exponent and biomass data and wrangle objects
-# MLEbins <- readRDS("data/MLEbins.RDS")
-# MLEbins <- MLEbins[,c("siteID", "ID", "year", "sampleEvent", "b")]
-
 biomass <- readRDS("data/mean_biomass.RDS")
 biomass <- biomass[,c("siteID", "ID", "year",
                       "sampleEvent", "u_biomass")]
 
 # join data sets
-#d <- left_join(MLEbins, biomass)
 d <- left_join(biomass, abiotic_s)
-#d <- left_join(biomass, ID_key)
 
 # convert mean dry weight estimate to grams
-# d$log_mg <- log10(d$u_biomass)
-# d$scale_mg <- d$u_biomass/max(d$u_biomass)
 d$biomass_g <- d$u_biomass/1000
 
 # community biomass models ------------------------------------------------
@@ -57,8 +50,6 @@ mod1 <- brm(data = d,
               (1 |siteID) + (1|year), 
             family = Gamma(link = "log"),
             prior =
-              # 95% of slope prior between -1 and 1
-              # log-link exponentiates
               c(prior(normal(0, 1),
                       class = "b"),
                 prior(normal(0,2), 
@@ -82,7 +73,6 @@ mod2 <- update(mod1, formula. = . ~ . -canopy -map.mm,
 mod3 <- update(mod1, formula. = . ~ . -canopy -tdn -tdp,
                cores = 4)
 
-plot(density(posterior_samples(mod3)$"r_siteID[LEWI,Intercept]"))
 # temp + canopy
 mod4 <- update(mod1,
                formula. = . ~ . -map.mm -tdn - tdp,
@@ -117,7 +107,9 @@ mod8 <- update(mod1,
 # saveRDS(mod7, file = "models_jsw/biommass_mod7.rds")
 # saveRDS(mod8, file = "models_jsw/biommass_mod8.rds")
 
-# coefficient estimates may vary due to random sampling in the model fitting procedure. To exactly recreate the results presented in the manuscript, load the following objects:
+# load saved models ####
+# coefficient estimates may vary due to random sampling in the model fitting procedure. 
+# To exactly recreate the results presented in the manuscript, load the following objects:
 
 # mod1 <- readRDS( file = "models_jsw/biommass_mod1.rds")
 # mod2 <- readRDS( file = "models_jsw/biommass_mod2.rds")
@@ -195,10 +187,10 @@ tdn_plot$`mat.c:tdn`$data %>%
        color = "TDN level") +
   scale_y_log10()
 
-# ggsave(file = "plots/SI_biomass_tdn_interaction.jpg",
-#        width = 7,
-#        height = 3.5,
-#        units = "in")
+ggsave(file = "plots/SI_biomass_tdn_interaction.jpg",
+       width = 7,
+       height = 3.5,
+       units = "in")
 
 tdp_plot <- plot(
   conditional_effects(
@@ -222,10 +214,10 @@ tdp_plot$`mat.c:tdp`$data %>%
        color = "TDP level") +
   scale_y_log10()
 
-# ggsave(file = "plots/SI_biomass_tdp_interaction.jpg",
-#        width = 7,
-#        height = 3.5,
-#        units = "in")
+ggsave(file = "plots/SI_biomass_tdp_interaction.jpg",
+       width = 7,
+       height = 3.5,
+       units = "in")
 
 # function to calculate probability that coef is < or > 0
 beta_0 <- function(model, b_est){
@@ -234,9 +226,6 @@ beta_0 <- function(model, b_est){
   more <- sum(post[[b_est]] > 0)/ nrow(post)
   list(less = less, more = more)
 }
-
-beta_0(mod7, "b_mat.c:tdn")
-beta_0(mod8, "b_mat.c:tdp")
 
 
 # model average -----------------------------------------------------------

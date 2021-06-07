@@ -29,13 +29,9 @@ biomass <- biomass[,c("siteID", "ID", "year",
                       "sampleEvent", "u_biomass")]
 
 # join data sets
-#d <- left_join(MLEbins, biomass)
 d <- left_join(biomass, abiotic_s)
-#d <- left_join(biomass, ID_key)
 
 # convert mean dry weight estimate to grams
-# d$log_mg <- log10(d$u_biomass)
-# d$scale_mg <- d$u_biomass/max(d$u_biomass)
 d$biomass_g <- d$u_biomass/1000
 
 # community biomass models ------------------------------------------------
@@ -53,7 +49,8 @@ mod8 <- readRDS( file = "models_jsw/biommass_mod8.rds")
 
 # remove LEWI and refit
 # compare coefficient estimates
-d_no_lewi <- d %>% filter(siteID != "LEWI")
+d_no_lewi <- d %>% 
+  filter(siteID != "LEWI")
 
 mod1b <- update(mod1,
                 newdata = d_no_lewi,
@@ -80,14 +77,14 @@ mod8b <- update(mod8,
                 newdata = d_no_lewi,
                 cores = 4)
 # save model fits for reproducibility
-# saveRDS(mod1b, file = "models_jsw/biommass_mod1_no_lewi.rds")
-# saveRDS(mod2b, file = "models_jsw/biommass_mod2_no_lewi.rds")
-# saveRDS(mod3b, file = "models_jsw/biommass_mod3_no_lewi.rds")
-# saveRDS(mod4b, file = "models_jsw/biommass_mod4_no_lewi.rds")
-# saveRDS(mod5b, file = "models_jsw/biommass_mod5_no_lewi.rds")
-# saveRDS(mod6b, file = "models_jsw/biommass_mod6_no_lewi.rds")
-# saveRDS(mod7b, file = "models_jsw/biommass_mod7_no_lewi.rds")
-# saveRDS(mod8b, file = "models_jsw/biommass_mod8_no_lewi.rds")
+saveRDS(mod1b, file = "models_jsw/biommass_mod1_no_lewi.rds")
+saveRDS(mod2b, file = "models_jsw/biommass_mod2_no_lewi.rds")
+saveRDS(mod3b, file = "models_jsw/biommass_mod3_no_lewi.rds")
+saveRDS(mod4b, file = "models_jsw/biommass_mod4_no_lewi.rds")
+saveRDS(mod5b, file = "models_jsw/biommass_mod5_no_lewi.rds")
+saveRDS(mod6b, file = "models_jsw/biommass_mod6_no_lewi.rds")
+saveRDS(mod7b, file = "models_jsw/biommass_mod7_no_lewi.rds")
+saveRDS(mod8b, file = "models_jsw/biommass_mod8_no_lewi.rds")
 
 
 # interaction plots

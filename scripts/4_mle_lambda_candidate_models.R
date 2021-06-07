@@ -29,8 +29,6 @@ MLEbins <- MLEbins[,c("siteID", "ID", "year", "sampleEvent", "b")]
 d <- left_join(MLEbins, abiotic_s)
 
 
-
-
 # MLEbins exponent models -------------------------------------------------
 
 
@@ -63,46 +61,9 @@ mod1 <- brm(data = d,
             control = list(adapt_delta = 0.99)
 )
 
-mod1b <- update(mod1,
-                cores = 4)
-
 # temp + nutrients
 mod2 <- update(mod1, formula. = . ~ . -canopy -map.mm,
                cores = 4)
-
-# temp + nutrients
-mod2a <- update(mod1, formula. = . ~ . -canopy -map.mm,
-                cores = 4)
-# temp + nutrients
-mod2b <- update(mod1, formula. = . ~ . -canopy -map.mm,
-                cores = 4)
-# temp + nutrients
-mod2c <- update(mod1, formula. = . ~ . -canopy -map.mm,
-                cores = 4)
-# temp + nutrients
-mod2d <- update(mod1, formula. = . ~ . -canopy -map.mm,
-                cores = 4)
-# coeff variation for MC-forums
-# summarize model coefficients for SI ####
-coef_mods_list <- list(
-  run1 = as.data.frame(fixef(mod2)),
-  run2 = as.data.frame(fixef(mod2a)),
-  run3 = as.data.frame(fixef(mod2b)),
-  run4 = as.data.frame(fixef(mod2c)),
-  run5 = as.data.frame(fixef(mod2d)))
-coef_names_list <- list(
-  row.names(fixef(mod2)),
-  row.names(fixef(mod2a)),
-  row.names(fixef(mod2b)),
-  row.names(fixef(mod2c)),
-  row.names(fixef(mod2d)))
-
-coef_mods_table <- map2(coef_mods_list,
-                        coef_names_list,
-                        ~cbind(.x, coef_name = .y))
-coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
-row.names(coef_mods_table) <- NULL
-coef_mods_table %>% arrange(coef_name, MOD)
 
 # "Climate model" temp + precipitation
 mod3 <- update(mod1, formula. = . ~ . -canopy -tdn -tdp,
@@ -112,62 +73,23 @@ mod4 <- update(mod1,
                formula. = . ~ . -map.mm -tdn - tdp,
                cores = 4)
 
-
 # just temperature
 mod5 <- update(mod1,
                formula. = . ~ . -map.mm -tdn -tdp -canopy,
                cores = 4)
-
-# mod5a <- update(mod1,
-#                formula. = . ~ . -map.mm -tdn -tdp -canopy,
-#                cores = 4)
-# just temperature
-mod5b <- update(mod1,
-                formula. = . ~ . -map.mm -tdn -tdp -canopy,
-                cores = 4)
-# just temperature
-mod5c <- update(mod1,
-                formula. = . ~ . -map.mm -tdn -tdp -canopy,
-                cores = 4)
-# just temperature
-mod5d <- update(mod1,
-                formula. = . ~ . -map.mm -tdn -tdp -canopy,
-                cores = 4)
-# coeff variation for MC-forums
-# summarize model coefficients for SI ####
-coef_mods_list <- list(
-  run1 = as.data.frame(fixef(mod5)),
-  run2 = as.data.frame(fixef(mod5a)),
-  run3 = as.data.frame(fixef(mod5b)),
-  run4 = as.data.frame(fixef(mod5c)),
-  run5 = as.data.frame(fixef(mod5d)))
-coef_names_list <- list(
-  row.names(fixef(mod5)),
-  row.names(fixef(mod5a)),
-  row.names(fixef(mod5b)),
-  row.names(fixef(mod5c)),
-  row.names(fixef(mod5d)))
-
-coef_mods_table <- map2(coef_mods_list,
-                        coef_names_list,
-                        ~cbind(.x, coef_name = .y))
-coef_mods_table <- bind_rows(coef_mods_table, .id = "MOD")
-row.names(coef_mods_table) <- NULL
-coef_mods_table %>% arrange(coef_name, MOD)
 
 # resources - autochthonous resources = TDN +TDP
 # Allochthonous resources = canopy
 mod6 <- update(mod1,
                formula. = . ~ . -map.mm,
                cores = 4)
-mod6b <- update(mod1,
-                formula. = . ~ . -map.mm,
-                cores = 4)
+
 # tdn interaction
 mod7 <- update(mod1, 
                formula. = . ~ . -map.mm -tdp - canopy +
                  mat.c:tdn,
                cores = 4)
+
 # tdp interaction
 mod8 <- update(mod1, 
                formula. = . ~ . -map.mm -tdn - canopy +
@@ -184,7 +106,12 @@ mod8 <- update(mod1,
 # saveRDS(mod7, file = "models_jsw/isd_mod7.rds")
 # saveRDS(mod8, file = "models_jsw/isd_mod8.rds")
 
-# coefficient estimates may vary due to random sampling in the model fitting procedure. To exactly recreate the results presented in the manuscript, load the following objects:
+# load MS models ----------------------------------------------------------
+
+
+# coefficient estimates may vary due to random sampling in the model fitting procedure. 
+# To exactly recreate the results presented in the manuscript, load the following objects:
+
 # mod1 <- readRDS( file = "models_jsw/isd_mod1.rds")
 # mod2 <- readRDS( file = "models_jsw/isd_mod2.rds")
 # mod3 <- readRDS( file = "models_jsw/isd_mod3.rds")
@@ -193,94 +120,6 @@ mod8 <- update(mod1,
 # mod6 <- readRDS( file = "models_jsw/isd_mod6.rds")
 # mod7 <- readRDS( file = "models_jsw/isd_mod7.rds")
 # mod8 <- readRDS( file = "models_jsw/isd_mod8.rds")
-
-# loo ####
-# # leave-one-out cross validation with bayesian stacking weights
-# this takes a long time to run, commenting out for now. 
-# loo_1 <- loo(mod1,
-#              reloo = TRUE,
-#              seed  = TRUE,
-#              cores = 6)
-# loo_2 <- loo(mod2,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-# loo_3 <- loo(mod3,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-# loo_4 <- loo(mod4,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-# loo_5 <- loo(mod5,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-# loo_6 <- loo(mod6,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-# loo_7 <- loo(mod7,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-# loo_8 <- loo(mod8,
-#              reloo = TRUE,
-#              seed = TRUE,
-#              cores = 6)
-
-loo_1 <- loo(mod1,
-             reloo = TRUE,
-             seed  = TRUE,
-             cores = 6)
-
-loo_1b <- loo(mod1b,
-              reloo = TRUE,
-              seed  = TRUE,
-              cores = 6)
-
-loo_5 <- loo(mod5,
-             reloo = TRUE,
-             seed  = TRUE,
-             cores = 6)
-
-loo_5b <- loo(mod5b,
-              reloo = TRUE,
-              seed  = TRUE,
-              cores = 6)
-loo_6 <- loo(mod6,
-             reloo = TRUE,
-             seed  = TRUE,
-             cores = 6)
-
-loo_6b <- loo(mod6b,
-              reloo = TRUE,
-              seed  = TRUE,
-              cores = 6)
-
-loo_model_weights(list(mod1 = loo_1, mod5 = loo_5, mod6 = loo_6))
-loo_model_weights(list(mod1b = loo_1b, mod5b = loo_5b, mod6b = loo_6b))
-
-loo_compare(loo_1, loo_5, loo_6)
-loo_compare(loo_1b, loo_5b, loo_6b)
-
-
-loo_compare(loo_1, loo_1b, loo_5, loo_5b, loo_6, loo_6b)
-
-# dir.create("stan_forum")
-# saveRDS(mod1, "stan_forum/mod1_5_20.RDS")
-# saveRDS(mod1b, "stan_forum/mod1b_5_20.RDS")
-# saveRDS(mod5, "stan_forum/mod5_5_20.RDS")
-# saveRDS(mod5b, "stan_forum/mod5b_5_20.RDS")
-# saveRDS(mod6, "stan_forum/mod6_5_20.RDS")
-# saveRDS(mod6b, "stan_forum/mod6b_5_20.RDS")
-# saveRDS(loo_1, "stan_forum/loo1_5_20.RDS")
-# saveRDS(loo_1b, "stan_forum/loo1b_5_20.RDS")
-# saveRDS(loo_5, "stan_forum/loo5_5_20.RDS")
-# saveRDS(loo_5b, "stan_forum/loo5b_5_20.RDS")
-# saveRDS(loo_6, "stan_forum/loo6_5_20.RDS")
-# saveRDS(loo_6b, "stan_forum/loo6b_5_20.RDS")
 
 # summarize model coefficients for SI ####
 coef_mods_list <- list(
@@ -384,10 +223,6 @@ beta_0 <- function(model, b_est){
   more <- sum(post[[b_est]] > 0)/ nrow(post)
   list(less = less, more = more)
 }
-
-beta_0(mod7, "b_mat.c:tdn")
-beta_0(mod8, "b_mat.c:tdp")
-fixef(mod8)
 
 # model average -----------------------------------------------------------
 
