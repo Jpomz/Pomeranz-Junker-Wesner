@@ -62,7 +62,7 @@ site.info <- read.csv("data/aquatic-field-sites.csv")
                 theme_void())
 
 ggsave(map,
-       file = "plots/map.png",
+       file = "plots/fig1_revision.png",
        width = 10,
        height = 8,
        dpi = 600)
@@ -127,7 +127,7 @@ main_plot <- plot_grid(main_plot,
 main_plot
 
 ggsave(main_plot,
-       file = "plots/main_plot.jpg",
+       file = "plots/fig2_revision.jpg",
        dpi = 600,
        width = 6,
        height = 7)
@@ -161,7 +161,7 @@ post_plot <- plot_grid(
 post_plot
 
 ggsave(post_plot,
-       file = "plots/post_plot.jpg",
+       file = "plots/fig3_revision.jpg",
        dpi = 600,
        width = 7,
        height = 5)
@@ -178,80 +178,45 @@ ggsave(post_plot,
 lit <- read_csv("data/temp_summaries_table.csv") %>% 
         filter(Include == "Y")
 
-library(ggthemes)
+mod_best <- readRDS(file = "models_jsw/isd_mod5.rds")
 
-# temperature only model
-b_mat_c_brms <- readRDS( file = "models_jsw/isd_mod5.rds")
-range_bmat <- fitted(
-        b_mat_c_brms,
-        newdata = data.frame(
-                mat.c = c(min(b_mat_c_brms$data$mat.c),
-                          max(b_mat_c_brms$data$mat.c))),
-        re_formula = NA,
-        summary = FALSE) %>% 
-        as.data.frame() %>%
-        rename(min = V1, max = V2) %>% 
+range_bmat <- fitted(mod_best, newdata = data.frame(mat.c = c(min(mod_best$data$mat.c),
+                                                              max(mod_best$data$mat.c))),
+                     re_formula = NA, summary = F) %>% 
+        as.data.frame() %>% rename(min = V1, max = V2) %>% 
         mutate(abs_diff = abs(min - max))
 
 
-range_bmat_summary <- range_bmat %>%
-        summarize(mean = median(abs_diff),
-                  lower = quantile(abs_diff, probs = 0.025),
-                  upper = quantile(abs_diff, probs = 0.975),
-                  mean_low = mean(min),
-                  mean_high = mean(max))
+range_bmat_summary <- range_bmat %>% summarize(mean = median(abs_diff),
+                                               lower = quantile(abs_diff, probs = 0.025),
+                                               upper = quantile(abs_diff, probs = 0.975),
+                                               mean_low = mean(min),
+                                               mean_high = mean(max))
+
 
 
 (lit_plot <- lit %>% 
-                mutate(Driver = fct_relevel(Driver,
-                                            "Temperature",
-                                            "Land Use")) %>% 
-                ggplot(aes(
-                        x = reorder(Author, -b_diff),
-                        y = b_diff)) +
+                mutate(Driver = fct_relevel(Driver, "Temperature", "Land Use")) %>% 
+                ggplot(aes(x = reorder(Author, -b_diff), y = b_diff)) +
                 coord_flip() +
-                # geom_segment(
-                #         aes(y= 0, yend = b_diff,
-                #             xend = reorder(Author, -b_diff))) +
-                geom_point(aes(shape = Driver,
-                            fill = Driver),
-                        size = 4) +
+                geom_pointrange(aes(ymin =b_diff - error, ymax = b_diff + error, shape = Driver, 
+                                    fill = Driver), size = 1) +
                 geom_hline(yintercept = range_bmat_summary$mean) +
-                annotate("text", x = 12, y = 0.7,
-                         label = "This study (median and 95% CrI)") +
-                geom_rect(
-                        aes(xmin = 0, xmax = 13,
-                            ymin = range_bmat_summary$lower,
-                            ymax = range_bmat_summary$upper),
-                        color = NA, alpha = 0.01) +
-                # scale_fill_brewer(type = "qual") +
-                # facet_grid(Driver ~ .) +
+                annotate("text", x = 12, y = 0.7, label = "This study (median and 95% CrI)") +
+                geom_rect(aes(xmin = 0, xmax = 13, ymin = range_bmat_summary$lower, 
+                              ymax = range_bmat_summary$upper), color = NA, alpha = 0.01) +
                 scale_shape_manual(values = c(21, 22, 23, 24)) +
-                scale_fill_manual(
-                        values = c("black", "white", "white", "white")) +
+                scale_fill_manual(values = c("black", "white", "white", "white")) +
                 labs(y = "Absolute change in ISD exponent (or slope)") +
                 theme_classic() +
                 theme(axis.title.y = element_blank(),
                       text = element_text(size = 15),
                       axis.text.y = element_text(size = 10)) +
-                annotate("segment",
-                         x = 11.6,
-                         y = 0.43,
-                         xend = 11.6,
-                         yend = 0.24,
-                         arrow=arrow(type = "closed")) +
-                annotate("segment",
-                         x = 11.6, y = 0.43, xend = 11.6, yend = 0.24,
-                         arrow=arrow(type = "closed")) +
+                annotate("segment", x = 11.6, y = 0.43, xend = 11.6, yend = 0.24, arrow=arrow(type = "closed")) +
                 ylim(0,1))
 
 
-ggsave(lit_plot,
-       file = "plots/lit_plot.jpg",
-       width = 9,
-       height = 3.5, 
-       units = "in")
-
+ggsave(lit_plot, file = "plots/lit_plot.jpg", width = 9, height = 3.5, units = "in", dpi = 500)
 
 
 
