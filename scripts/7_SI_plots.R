@@ -47,12 +47,6 @@ ID_mat <- b_mod_data %>%
 
 
 biomass_mod_data <- biomass_mod$data 
-# 
-# abiotic <- read.csv("data/abiotic.csv")[,c(1,5)]
-# names(abiotic) <- c("siteID", "canopy")
-# abiotic$canopy <- scale(abiotic$canopy)
-
-
 
 #prior v posterior ----------------------------
 
@@ -97,19 +91,18 @@ draws_b_long <- draws_b_long %>%
 
 
 prior_post_b <- draws_b_long %>% 
-  # mutate(parameter = case_when(
-  #   parameter == "b" ~ "\u03b2", 
-  #   parameter == "intercept" ~ "\u03b1",
-  #   parameter == "sd_site_id" ~ "\u03c3_s",
-  #   parameter == "sd_year" ~ "\u03c3_y",
-  #   parameter == "sigma" ~ "\u03c3")) %>% 
-  ggplot(aes(x = value, y = ..scaled.., fill = model)) + 
+  ggplot(aes(
+    x = value,
+    y = ..scaled..,
+    fill = model)) + 
   geom_density() +
-  facet_wrap(~parameter, scales = "free") +
+  facet_wrap(~parameter,
+             scales = "free") +
   scale_fill_manual(values = c("black", "NA")) +
   labs(y = "Scaled Density", 
        x = "Parameter Value") +
   theme_classic()
+
 # figure S4
 ggsave(prior_post_b,
        file = "plots/prior_post_isd.jpg",
@@ -159,15 +152,13 @@ draws_biomass_long <- draws_biomass_long %>%
   bind_rows(biomass_priors)
 
 (prior_post_biomass <- draws_biomass_long %>% 
-  # mutate(parameter = case_when(
-  #   parameter == "b" ~ "\u03b2", 
-  #   parameter == "intercept" ~ "\u03b1",
-  #   parameter == "sd_site_id" ~ "\u03c3_s",
-  #   parameter == "sd_year" ~ "\u03c3_y",
-  #   parameter == "sigma" ~ "\u03c3")) %>% 
-  ggplot(aes(x = value, y = ..scaled.., fill = model)) + 
+  ggplot(
+    aes(x = value,
+        y = ..scaled..,
+        fill = model)) + 
   geom_density() +
-  facet_wrap(~parameter, scales = "free") +
+  facet_wrap(~parameter,
+             scales = "free") +
   scale_fill_manual(values = c("black", "NA")) +
   labs(y = "Scaled Density", 
        x = "Parameter Value") +
@@ -198,7 +189,7 @@ mean_year_sds <- draws_b_wide %>%
 #add predictor variable(s)
 draws_b_withx <- draws_b_wide %>%
   group_by(model) %>% 
-  sample_n(1000) %>%  #randomly choose 2000 iterations from each group to save space
+  sample_n(1000) %>%  #randomly choose 1000 iterations from each group to save memory space
   expand_grid(mat.c = unique(b_mod_data$mat.c)) %>% #add temperature
   left_join(b_mod_data %>%
               distinct(mat.c, siteID, year)) #add info for site and year
@@ -208,12 +199,18 @@ draws_b_withx <- draws_b_wide %>%
 site_offsets <- draws_b_withx %>%
   distinct(model, iter) %>% 
   left_join(mean_site_sds) %>% 
-  mutate(site_offset = rnorm(nrow(.), 0, mean_site_sds))
+  mutate(
+    site_offset = rnorm(nrow(.),
+                        0,
+                        mean_site_sds))
 
 year_offsets <- draws_b_withx %>%
   distinct(model, iter) %>% 
   left_join(mean_year_sds) %>% 
-  mutate(year_offset = rnorm(nrow(.), 0, mean_year_sds))
+  mutate(
+    year_offset = rnorm(nrow(.),
+                        0,
+                        mean_year_sds))
 
 #solve model equation at each iteration
 post_prior_predict <- draws_b_withx %>% 
@@ -227,7 +224,6 @@ post_prior_predict <- draws_b_withx %>%
 
 # Figure S2 panels a and b
 (plot_slope_postprior <- post_prior_predict %>% 
-  #filter(iter < 1000) %>%
   mutate(model = fct_relevel(model, "prior")) %>% 
   mutate(model = case_when(model == "prior"~ "a) Prior", TRUE ~ "b) Posterior")) %>% 
   ggplot(aes(x = mat.c,
@@ -254,15 +250,15 @@ post_prior_predict <- posterior_samples(biomass_mod) %>%
   mutate(iter = 1:nrow(.)) %>% 
   sample_n(1000) %>% 
   expand_grid(mat.c = biomass_mod_data$mat.c) %>% 
-  mutate(prior_y = exp(prior_Intercept + prior_b*mat.c),
-         posterior_y = exp(b_Intercept + b_mat.c*mat.c)) %>% 
+  mutate(
+    prior_y = exp(prior_Intercept + prior_b*mat.c),
+    posterior_y = exp(b_Intercept + b_mat.c*mat.c)) %>%
   pivot_longer(cols = c(prior_y, posterior_y)) %>% 
   separate(name, c("model", "y"))
 
 
 # fig S1 panel c and d
 (plot_biomass_postprior <- post_prior_predict %>%
-  #filter(iter<= 1000) %>%
   mutate(model = fct_relevel(model, "prior")) %>% 
   mutate(model = 
            case_when(model == "prior" ~ "c) Prior",
@@ -273,12 +269,15 @@ post_prior_predict <- posterior_samples(biomass_mod) %>%
             alpha = 0.1) +
   facet_wrap(~model) +
   guides(color = F) +
-  labs(y = expression(paste("Macroinvertebrate dry mass (g/",m^2,")")),
-       x = "Std(Mean Annual Temperature") +
+    labs(y = expression(
+      paste(
+        "Macroinvertebrate dry mass (g/",m^2,")")),
+      x = "Std(Mean Annual Temperature") +
   geom_point(
     data = biomass_mod_data %>%
       mutate(model = "d) Posterior",
-             model = fct_relevel(model,"d) Posterior",
+             model = fct_relevel(model,
+                                 "d) Posterior",
                                  after = 2)),
     aes(y = biomass_g),
     size = 0.5) +
@@ -361,9 +360,7 @@ saveRDS(b.mod_sd2, file = "results/b.mod_sd2.rds")
 # biomass model
 # update the biomass model by halving the SD prior values
 biomass_sd0.5 <- update(biomass_mod,
-                        prior =
-                          # 95% of slope prior between -1 and 1
-                          # log-link exponentiates
+                        prior = 
                           c(prior(normal(0, 0.5),
                                   class = "b"),
                             prior(normal(0,1), 
@@ -379,10 +376,7 @@ saveRDS(biomass_sd0.5, file = "results/biomass_sd0.5.rds")
 
 # update the biomass model by doubling the SD prior values
 biomass_sd2 <- update(biomass_mod,
-                        prior =
-                          # 95% of slope prior between -1 and 1
-                          # log-link exponentiates
-                          c(prior(normal(0, 2),
+                        prior =c(prior(normal(0, 2),
                                   class = "b"),
                             prior(normal(0,4), 
                                   class = "Intercept"),
@@ -446,14 +440,17 @@ all_b_sens <- bind_rows(posts_b_model,
   mutate(wrap = paste(response, "-", version))
 
 (prior_sens_plot <- all_b_sens %>% 
-  mutate(name = case_when(name == "b_mat_c" ~ "\u03b2_mat", 
-                          name == "b_intercept" ~ "\u03b1",
-                          name == "b_canopy" ~ "\u03b2_canopy",
-                          name == "b_tdn" ~ "\u03b2_tdn",
-                          name == "b_tdp" ~ "\u03b2_tdp",
-                          name == "b_map_mm" ~ "\u03b2_map_mm")) %>% 
+  mutate(
+    name = case_when(name == "b_mat_c" ~ "\u03b2_mat", 
+                     name == "b_intercept" ~ "\u03b1",
+                     name == "b_canopy" ~
+                       "\u03b2_canopy",
+                     name == "b_tdn" ~ "\u03b2_tdn",
+                     name == "b_tdp" ~ "\u03b2_tdp",
+                     name == "b_map_mm" ~
+                       "\u03b2_map_mm")) %>% 
     filter(!is.na(name)) %>%
-  ggplot(aes(x = value,
+    ggplot(aes(x = value,
              color = model,
              y = ..scaled..)) +
   geom_density() + 
@@ -474,10 +471,6 @@ ggsave(prior_sens_plot,
 
 # fig S9 ####
 # mean body mass
-
-#library(ggridges)
-
-
 # read in estimated dry weight data
 dw <- readRDS("data/macro_dw.RDS")
 
@@ -500,9 +493,6 @@ biomass <- dw %>%
                          na.rm = TRUE)) %>%
   ungroup()
 
-
-# biomass <- left_join(biomass,
-#                      site.info)
 biomass <- left_join(biomass,
                      ID_key)
 
@@ -646,13 +636,18 @@ dw2 <- dw2 %>%
 dw2_wq <- dw2 %>%
   group_by(ID) %>%
   summarise(mat.c = unique(mat.c),
-            wq05 = wtd.quantile(dw, weights = no_m2, probs = 0.05),
-            #wq10 = wtd.quantile(dw, weights = no_m2, probs = 0.05),
-            #wq25 = wtd.quantile(dw, weights = no_m2, probs = 0.25),
-            wq50 = wtd.quantile(dw, weights = no_m2, probs = 0.5),
-            #wq75 = wtd.quantile(dw, weights = no_m2, probs = 0.75),
-            wq95 = wtd.quantile(dw, weights = no_m2, probs = 0.95))
-
+            wq05 = wtd.quantile(
+              dw,
+              weights = no_m2,
+              probs = 0.05),
+            wq50 = wtd.quantile(
+              dw,
+              weights = no_m2,
+              probs = 0.5),
+            wq95 = wtd.quantile(
+              dw,
+              weights = no_m2,
+              probs = 0.95))
 
 dw2_wq %>%
   pivot_longer(cols = 3:5) %>%
@@ -665,12 +660,11 @@ dw2_wq %>%
              fill = name))+
   geom_point() +
   stat_smooth(method = "lm") +
-  #scale_color_viridis_d(option = "plasma") +
-  #scale_fill_viridis_d(option = "plasma") +
-  #scale_y_log10() +
   theme_bw()+
   labs(y = "Body Size",
-       x = expression("Mean Annual Temperature " ( degree*C))) +
+       x = 
+         expression(
+           "Mean Annual Temperature " ( degree*C))) +
   NULL
 ggsave("plots/SI_dw_weighted_quant.jpg",
        dpi = 600,
@@ -694,25 +688,3 @@ as_tibble(data.frame(x = x,
   ggplot(aes(x = x, y = value, color = name)) +
   geom_line() +
   scale_y_log10()
-
-
-# dw2 %>%
-#   filter(dw <= 10 ) %>% #,
-#          # siteID == "OKSR" |siteID == "CARI" |
-#          #   siteID == "MART" | siteID == "KING" |
-#          #   siteID == "PRIN" | siteID == "CUPE") %>%
-#   ggplot(aes(x = dw, 
-#              #weights = no_m2,
-#              group = siteID,
-#              fill = mat.c)) +
-#   stat_density(adjust = 1.5) +
-#   facet_wrap(reorder(siteID, -mat.c)~., ncol = 1) +
-#   scale_x_log10() +
-#   theme(strip.background = element_blank(),
-#         strip.text.x = element_blank()
-#   )
-# ggsave("plots/SI_dw_density.jpg",
-#        dpi = 600,
-#        width = 6,
-#        height = 8)
-# 
