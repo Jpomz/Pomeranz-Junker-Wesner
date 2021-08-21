@@ -688,3 +688,77 @@ as_tibble(data.frame(x = x,
   ggplot(aes(x = x, y = value, color = name)) +
   geom_line() +
   scale_y_log10()
+
+
+# air v water temp --------------------------------------------------------
+
+library(neonUtilities)
+
+air <- loadByProduct("DP1.00002.001",
+                     site = c("SYCA", "PRIN", "POSE", "KING","MCRA",
+                              "MART", "HOPB", "COMO", "CARI"),
+                     startdate = "2019-01",
+                     enddate = "2019-12",
+                     nCores = 4,
+                     check.size = FALSE)
+
+air_mean <- air$SAAT_30min %>%
+  mutate(date = as.Date(startDateTime)) %>%
+  group_by(siteID, date) %>%
+  summarize(temp = mean(tempSingleMean, na.rm = TRUE)) %>%
+  filter(!is.na(temp),
+         !is.nan(temp)) %>%
+  #filter(temp > -10, temp < 40) %>%
+  mutate(year = format(date, format = "%Y"),
+         jdate = format(date, format = "%j")) %>%
+  mutate(jdate = as.numeric(jdate)) %>%
+  select(siteID, jdate, temp)
+
+water <- loadByProduct(
+  "DP1.20053.001",
+  site = c("SYCA", "PRIN", "POSE", "KING", "MCRA",
+           "MART", "HOPB", "COMO", "CARI"),
+  startdate = "2019-01",
+  enddate = "2019-12",
+  nCores = 4,
+  check.size = FALSE)$TSW_30min
+
+water_mean <- water %>% 
+  mutate(date = as.Date(startDateTime)) %>%
+  group_by(siteID, date) %>%
+  summarize(temp = mean(surfWaterTempMean, na.rm = TRUE)) %>%
+  filter(!is.na(temp),
+         !is.nan(temp)) %>%
+  #filter(temp > -10, temp < 40) %>%
+  mutate(year = format(date, format = "%Y"),
+         jdate = format(date, format = "%j")) %>%
+  mutate(jdate = as.numeric(jdate)) %>%
+  select(siteID, jdate, temp)
+
+air_j <- air_mean
+air_j$measure <- "air"
+water_j <- water_mean
+water_j$measure <- "water"
+
+long <- bind_rows(air_j, water_j) 
+long <- long %>%
+  mutate(siteID_f = 
+           factor(siteID,
+                  levels = c("SYCA", "PRIN", "POSE", "KING",
+                             "MCRA",
+                             "MART", "HOPB", "COMO", "CARI")))
+long %>%
+  #filter(temp > -10, temp < 40) %>%
+  ggplot(
+       aes(x = jdate,
+           y = temp,
+           color = measure)) +
+  geom_point(alpha = 0.5) +
+  facet_wrap(.~siteID_f) +
+  theme_bw() +
+  labs(y = "water temp", x = "Julian day",
+       title = "Empirical Temperatures in 2019")
+ggsave("plots/SI_air_v_water.png",
+       dpi = 600,
+       width = 7,
+       height = 5)

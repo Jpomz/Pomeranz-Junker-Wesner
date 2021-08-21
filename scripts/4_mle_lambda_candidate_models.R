@@ -224,6 +224,9 @@ beta_0 <- function(model, b_est){
   list(less = less, more = more)
 }
 
+# probability of temperature x TDP interaction?
+beta_0(mod8, "b_mat.c:tdp")
+
 # model average -----------------------------------------------------------
 
 mod_avg_params <- posterior_average(
@@ -348,3 +351,24 @@ mat_raw <- abiotic %>%
          y = "ISD exponent"))
 
 saveRDS(isd_fit_mat, "plots/isd_fit.RDS")
+
+(graph_abstract <- mod_avg %>%
+    mutate(mat.c = mat_raw$mat.c,
+           mat_raw = mat_raw$mat_raw) %>% 
+    ggplot(aes(
+      x = mat_raw, 
+      y = estimate)) +
+    geom_line() +
+    geom_ribbon(aes(ymin = q2_5, ymax = q97_5), alpha = 0.2) +
+    scale_fill_manual(values = c("gray80")) +
+    geom_point(data = d %>% left_join(mat_raw),
+               aes(y = b,
+                   color = mat_raw),
+               size = 2.5) +
+    scale_color_viridis_c(option = "plasma") +
+    theme_bw() +
+    labs(x = expression("Mean Annual Temperature " ( degree*C)),
+         y = "ISD exponent") +
+    guides(color=guide_legend(title="Temp.")))
+
+saveRDS(graph_abstract, "plots/graph_abs.RDS")
