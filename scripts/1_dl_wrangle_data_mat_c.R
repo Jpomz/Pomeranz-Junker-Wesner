@@ -7,7 +7,7 @@
 ### PLEASE NOTE ###
 # If you would like to recreate the results presented in the manuscript, I recommend you DO NOT RUN THIS SCRIPT!
 
-# instead, you can work directly with the data used for the analysis by downloading it from [<insert data dryad URL here once archived>] and skipping to script 2_mle_bin_full_data.R
+# instead, you can work directly with the data used for the analysis by downloading it from [https://github.com/Jpomz/Pomeranz-Junker-Wesner/blob/master/data/macro_dw.RDS] and skipping to script 2_mle_bin_full_data.R
 
 library(neonUtilities)
 library(tidyverse)
