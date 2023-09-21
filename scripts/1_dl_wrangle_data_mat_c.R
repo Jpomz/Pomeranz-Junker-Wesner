@@ -37,10 +37,12 @@ macro <- loadByProduct(dpID = "DP1.20120.001",
 MN.lw <- LW_coef(x = macro$inv_taxonomyProcessed,
                  lw_coef = coeff,
                  percent = TRUE)
-# 96% of observations have length weight equations
+# ~96% of observations have length weight equations
 
 # # estimate dry weights based on length weight coefficients
 MN <- est_dw(MN.lw, fieldData = macro$inv_fieldData)
+head(MN)
+dim(MN)
 
 # questionable measurements ####
 # filter out individuals that were "damaged" and measurement was affected
@@ -48,7 +50,7 @@ MN.no.damage <- MN.lw %>%
   filter(!str_detect(sampleCondition, "measurement")) %>%
   est_dw( fieldData = macro$inv_fieldData)
 
-MN.no.damage <- readRDS("data/macro_dw.RDS")
+# MN.no.damage <- readRDS("data/macro_dw.RDS")
 
 # remove lake and large river sites
 lakes <- c("BARC", "CRAM", "LIRO", "PRLA", "PRPO",
@@ -102,12 +104,15 @@ MN.no.damage <- MN.no.damage %>%
   mutate(ID = group_indices(
     ., siteID, collectDate)) %>%
   arrange(ID)
+# throws a warning that group_indices() is deprecated as of dplyr v1.0.0. 
+# appears to still be working correctly
 
 
 # make a key for which ID goes with whoch siteID:collectDate combo
 ID_key <- MN.no.damage %>%
   select(ID, siteID, collectDate) %>%
   distinct()
+ID_key
 
 # add sample year, month, and event (1, 2, 3) to ID_key
 # most sites have first sample event before June, and last in August or later
@@ -140,12 +145,9 @@ message(paste(
   round(nrow(MN.no.damage) / nrow(MN.lw), 4)*100,
   "percent of individuals were not damaged"))
 
-# 90% not damaged
-
 
 # total number of measured individuals
 length(na.omit(MN.no.damage$sizeClass))
-# > 82 k individual measurements
 
 # clean up MN.no.damage object
 MN.no.damage <- MN.no.damage %>%
@@ -160,6 +162,3 @@ MN.no.damage <- MN.no.damage %>%
   uncount(count)
 
 nrow(MN.no.damage)
-# 18 million rows
-
-
